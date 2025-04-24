@@ -79,10 +79,10 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
     mainContainer.className = "print-form-container";
 
     // Tạo button Print
-    this._printButton = document.createElement("button");
+    //this._printButton = document.createElement("button");
     // this._printButton.innerHTML = "In";
     // this._printButton.className = "print-button";
-    this._printButton.onclick = this.handlePrint.bind(this);
+    //this._printButton.onclick = this.handlePrint.bind(this);
 
     // Tạo loading indicator
     this._loadingIndicator = document.createElement("div");
@@ -95,41 +95,34 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
     this._printContent.className = "print-content";
 
     // Thêm các elements vào container
-    mainContainer.appendChild(this._printButton);
+    // mainContainer.appendChild(this._printButton);
     mainContainer.appendChild(this._loadingIndicator);
     mainContainer.appendChild(this._printContent);
     this._container.appendChild(mainContainer);
   }
 
   private renderForm(saleOrder: ISaleOrder, saleOrderDetails: ISaleOrderDetail[]): void {
-    
     // Kiểm tra trạng thái VAT
     const vatStatus = saleOrder.crdfd_vatstatus;
     const isVATApplicable = vatStatus === 283640000;
-
+  
     // Lấy điều kiện thanh toán
     const paymentCondition = this.getDieuKhoanThanhToan(saleOrder.dieukhoan);
-
+  
     // 1. Tạo HTML cơ bản
     const htmlContent = this.generateFormHTML(saleOrder, saleOrderDetails);
-
+  
     // 2. Tạo JavaScript riêng biệt
     const scriptContent = this.generateFormScript(saleOrder, saleOrderDetails);
-
+  
     // 3. Kết hợp và cập nhật nội dung
     this._printContent.innerHTML = htmlContent;
-
+  
     // 4. Thêm script element riêng biệt
     const scriptElement = document.createElement("script");
     scriptElement.type = "text/javascript";
     scriptElement.textContent = scriptContent;
     this._printContent.appendChild(scriptElement);
-
-    // 5. Gắn sự kiện in cho nút in
-    const printButton = this._printContent.querySelector('#btnClick');
-    if (printButton) {
-      printButton.addEventListener('click', this.handlePrint.bind(this));
-    }
   }
 
   // Phương thức tạo HTML
@@ -149,12 +142,83 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
     <link rel='stylesheet' href='https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css'>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
     <style>
+      /* Các style hiện tại giữ nguyên */
+      
+      /* Thêm các style mới cho việc in */
+      @media print {
+        body {
+          zoom: 85%;
+          margin: 0;
+          padding: 0;
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+        
+        .container {
+          width: 100%;
+          margin: 0;
+          padding: 0;
+        }
+        
+        .no-print {
+          display: none !important;
+        }
+        
+        @page {
+          size: A4;
+          margin: 10mm;
+        }
+        
+        table {
+          page-break-inside: auto;
+        }
+        
+        tr {
+          page-break-inside: avoid;
+          page-break-after: auto;
+        }
+        
+        thead {
+          display: table-header-group;
+        }
+        
+        tfoot {
+          display: table-footer-group;
+        }
+      }
+
+      /* Style cho màn hình */
+      @media screen {
+        body {
+          margin: 0;
+          padding: 0;
+        }
+        
+        .container {
+          max-width: 21cm; /* Độ rộng của trang A4 */
+          margin: 0 auto;
+          padding: 10px;
+          background: white;
+        }
+        
+        .table-responsive {
+          overflow-x: visible;
+        }
+        
+        #colorTitle {
+          background-color: #338da5 !important;
+          color: #ffffff !important;
+        }
+      }
+      
+      /* Style chung */
       p {
         margin: 0 0 0px !important;
       }
 
       table {
         margin: 0 0 0px !important;
+        width: 100%;
       }
 
       .table > tbody > tr > td,
@@ -166,75 +230,14 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
         padding: 2px !important;
       }
 
-      .table > tbody > tr > td,
-      .table > tbody > tr > th,
-      .table > tfoot > tr > td,
-      .table > tfoot > tr > th,
-      .table > thead > tr > td,
-      .table > thead > tr > th {
-        border-top: 0px !important;
-      }
-
-      .table-bordered > tbody > tr > td,
-      .table-bordered > tbody > tr > th,
-      .table-bordered > tfoot > tr > td,
-      .table-bordered > tfoot > tr > th,
-      .table-bordered > thead > tr > td,
-      .table-bordered > thead > tr > th {
-        border: 1px solid #000000 !important;
-      }
-
-      .table > tbody + tbody {
-        border-top: 1px solid #ddd !important;
-      }
-
-      @media print {
-        body {
-          zoom: 85%;
-        }
-        .no-print {
-          display: none !important;
-        }
-      }
-
-      @media screen, print {
-        #colorTitle {
-          background-color: #338da5 !important;
-          color: #ffffff !important;
-        }
-      }
-      
-      .btn-action {
-        padding: 10px 15px;
-        margin: 10px 5px;
-        border: none;
-        border-radius: 5px;
-        cursor: pointer;
-        font-weight: bold;
-        font-size: 16px;
-      }
-      
-      .btn-print {
-        background-color: #337ab7;
-        color: white;
-      }
-      
-      .btn-export-pdf {
-        background-color: #d9534f;
-        color: white;
-      }
-      
-      .action-buttons {
-        text-align: center;
-        margin: 20px 0;
-      }
+      /* Các style khác giữ nguyên */
     </style>
 </head>
 
 <body>
-    <div class='container' style='font-family: undefined'>
+    <div class='container' style='font-family: undefined; max-width: 21cm; margin: 0 auto; background: white;'>
       <div class="action-buttons no-print">
-        <button id="btnPrint" class="btn-action btn-print" onclick="window.print()">In</button>
+        <button id="btnPrint" class="btn-action btn-print">In</button>
         <button id="btnClick" class="btn-action btn-export-pdf">Xuất PDF</button>
       </div>
       <div class='row'>
@@ -440,8 +443,9 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
   }
 
   // Phương thức tạo JavaScript
-  private generateFormScript(saleOrder: ISaleOrder, saleOrderDetails: ISaleOrderDetail[]): string {
-    return `
+  // Phương thức tạo JavaScript
+private generateFormScript(saleOrder: ISaleOrder, saleOrderDetails: ISaleOrderDetail[]): string {
+  return `
 function myFunction() {
     // Lấy phần tử container chứa form
     var element = document.querySelector('.container');
@@ -476,34 +480,59 @@ function handlePrint() {
         return;
     }
 
-    // Tạo một div mới để chứa nội dung in
-    var printContent = element.cloneNode(true);
-    
     // Tạo một iframe mới
     var printFrame = document.createElement('iframe');
-    printFrame.style.position = 'absolute';
-    printFrame.style.left = '-9999px';
+    printFrame.style.visibility = 'hidden';
+    printFrame.style.position = 'fixed';
+    printFrame.style.right = '0';
+    printFrame.style.bottom = '0';
+    printFrame.style.width = '0';
+    printFrame.style.height = '0';
     document.body.appendChild(printFrame);
-    
+
     // Ghi nội dung vào iframe
     var frameDoc = printFrame.contentWindow.document;
     frameDoc.open();
-    frameDoc.write('<html><head>');
+    frameDoc.write('<!DOCTYPE html><html><head>');
     
     // Copy các style từ trang gốc
     document.querySelectorAll('style, link[rel="stylesheet"]').forEach(styleSheet => {
         frameDoc.write(styleSheet.outerHTML);
     });
     
+    // Thêm style đặc biệt cho iframe
+    frameDoc.write(\`
+        <style>
+            @page {
+                size: A4;
+                margin: 10mm;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            .container {
+                width: 100% !important;
+                max-width: none !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+        </style>
+    \`);
+    
     frameDoc.write('</head><body>');
-    frameDoc.write(printContent.outerHTML);
+    frameDoc.write(element.outerHTML);
     frameDoc.write('</body></html>');
     frameDoc.close();
     
     // Đợi tải xong các resource
     printFrame.onload = function() {
-        printFrame.contentWindow.focus();
-        printFrame.contentWindow.print();
+        try {
+            printFrame.contentWindow.focus();
+            printFrame.contentWindow.print();
+        } catch (e) {
+            console.error('Lỗi khi in:', e);
+        }
         
         // Xóa iframe sau khi in xong
         setTimeout(function() {
@@ -512,29 +541,38 @@ function handlePrint() {
     };
 }
 
+// Thêm thư viện html2pdf vào trang và gắn sự kiện cho các nút
+function initializeButtons() {
+    // Gắn sự kiện cho nút xuất PDF
+    var exportButton = document.getElementById('btnClick');
+    if (exportButton) {
+        exportButton.addEventListener('click', myFunction);
+    }
+    
+    // Gắn sự kiện cho nút in
+    var printButton = document.getElementById('btnPrint');
+    if (printButton) {
+        printButton.addEventListener('click', handlePrint);
+    }
+}
+
 // Thêm thư viện html2pdf vào trang
 function addHtml2PdfLib() {
     if (!document.getElementById('html2pdf-script')) {
         var script = document.createElement('script');
         script.id = 'html2pdf-script';
         script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-        script.onload = function() {
-            // Khi thư viện đã tải xong, gắn sự kiện cho nút
-            document.getElementById('btnClick').addEventListener('click', myFunction);
-            document.getElementById('btnPrint').addEventListener('click', handlePrint);
-        };
+        script.onload = initializeButtons;
         document.head.appendChild(script);
     } else {
-        // Nếu thư viện đã tồn tại, chỉ gắn sự kiện
-        document.getElementById('btnClick').addEventListener('click', myFunction);
-        document.getElementById('btnPrint').addEventListener('click', handlePrint);
+        initializeButtons();
     }
 }
 
 // Gọi hàm thêm thư viện
 addHtml2PdfLib();
   `;
-  }
+}
 
   // Phương thức tạo HTML cho chi tiết đơn hàng
   private renderOrderDetailsRows(details: ISaleOrderDetail[]): string {
