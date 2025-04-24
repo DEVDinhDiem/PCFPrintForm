@@ -36,11 +36,13 @@ interface IContact {
 export class PrintForm implements ComponentFramework.StandardControl<IInputs, IOutputs> {
   private _container: HTMLDivElement;
   private _context: ComponentFramework.Context<IInputs>;
-  private _IDBanHang: string;
   private _printButton: HTMLButtonElement;
   private _printContent: HTMLDivElement;
   private _notifyOutputChanged: () => void;
   private _loadingIndicator: HTMLDivElement;
+  private _maxRecords: number;
+  private _currentSessionId = 0; // Thêm ID phiên làm việc
+  private _isDataLoaded = false; // Thêm flag để kiểm tra đã tải đủ dữ liệu chưa
 
   /**
    * Empty constructor.
@@ -68,7 +70,7 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
     this._context = context;
     this._container = container;
     this._notifyOutputChanged = notifyOutputChanged;
-    this._IDBanHang = context.parameters.IDBanHang.raw || "";
+    this._maxRecords = parseInt(context.parameters.MaxRecord.raw || "0");
 
     // Tạo UI
     this.createUI();
@@ -78,12 +80,6 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
     // Tạo container chính
     const mainContainer = document.createElement("div");
     mainContainer.className = "print-form-container";
-
-    // Tạo button Print
-    //this._printButton = document.createElement("button");
-    // this._printButton.innerHTML = "In";
-    // this._printButton.className = "print-button";
-    //this._printButton.onclick = this.handlePrint.bind(this);
 
     // Tạo loading indicator
     this._loadingIndicator = document.createElement("div");
@@ -96,7 +92,6 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
     this._printContent.className = "print-content";
 
     // Thêm các elements vào container
-    // mainContainer.appendChild(this._printButton);
     mainContainer.appendChild(this._loadingIndicator);
     mainContainer.appendChild(this._printContent);
     this._container.appendChild(mainContainer);
@@ -110,6 +105,7 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
         margin: 0 auto;
         overflow-y: auto;
         padding: 10px;
+        padding-bottom: 50px; /* Thêm padding dưới để đảm bảo cuộn xuống hết nội dung */
       }
       
       .loading-indicator {
@@ -121,6 +117,12 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
       
       .print-content {
         width: 100%;
+        margin-bottom: 50px; /* Thêm margin dưới cho nội dung */
+      }
+
+      /* Đảm bảo container của form không bị cắt */
+      .container {
+        margin-bottom: 50px !important;
       }
     `;
     document.head.appendChild(containerStyle);
@@ -227,6 +229,7 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
           margin: 0 auto;
           overflow-y: auto; /* Thêm thanh cuộn dọc */
           padding: 10px;
+          padding-bottom: 50px;
         }
         
         .container {
@@ -235,6 +238,7 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
           margin: 0 auto;
           padding: 10px;
           background: white;
+          margin-bottom: 50px !important;
         }
         
         .table-responsive {
@@ -299,12 +303,15 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
         padding: 2px !important;
       }
 
-      /* Các style khác giữ nguyên */
+      /* Đảm bảo phần cuối cùng hiển thị đầy đủ */
+      .row:last-child {
+        margin-bottom: 50px;
+      }
     </style>
 </head>
 
 <body>
-    <div class='container' style='font-family: undefined; width: 100%; margin: 0 auto; background: white;'>
+    <div class='container' style='font-family: undefined; width: 100%; margin: 0 auto; background: white; margin-bottom: 50px;'>
       <div class="action-buttons no-print">
         <button id="btnPrint" class="btn-action btn-print">In</button>
         <button id="btnClick" class="btn-action btn-export-pdf">Xuất PDF</button>
@@ -944,87 +951,359 @@ addHtml2PdfLib();
    * @param context The entire property bag available to control via Context Object; It contains values as set up by the customizer mapped to names defined in the manifest, as well as utility functions
    */
   public updateView(context: ComponentFramework.Context<IInputs>): void {
-    // Hiển thị loading indicator
-    if (this._loadingIndicator) {
-      this._loadingIndicator.style.display = "block";
-    }
+    try {
+      // Mỗi lần gọi updateView, tăng sessionId để huỷ các phiên cũ
+      this._currentSessionId++;
+      const currentSessionId = this._currentSessionId;
+      
+      console.log(`===== BẮT ĐẦU UPDATE VIEW [Phiên ${currentSessionId}] =====`);
+      
+      // Hiển thị loading indicator
+      if (this._loadingIndicator) {
+        this._loadingIndicator.style.display = "block";
+      }
 
-    // Cập nhật ID đơn hàng nếu thay đổi
-    this._IDBanHang = context.parameters.IDBanHang.raw || "";
+      // Cập nhật số lượng bản ghi tối đa nếu thay đổi
+      const previousMaxRecords = this._maxRecords;
+      this._maxRecords = parseInt(context.parameters.MaxRecord.raw || "0");
+      console.log("Số lượng bản ghi tối đa cần tải:", this._maxRecords);
 
-    // Truy cập dữ liệu từ dataset
-    const saleOrdersDataset = context.parameters.saleOrders;
-    const saleOrderDetailsDataset = context.parameters.saleOrderDetails;
+      // Truy cập dữ liệu từ dataset
+      const saleOrdersDataset = context.parameters.saleOrders;
+      const saleOrderDetailsDataset = context.parameters.saleOrderDetails;
 
-    if (saleOrdersDataset.loading || saleOrderDetailsDataset.loading) {
-      // Đang tải dữ liệu, hiển thị trạng thái loading
-      this._printContent.innerHTML = `
-                <div class="info-message">
-                    <p>Đang tải dữ liệu...</p>
-                </div>
+      console.log("saleOrdersDataset records:", saleOrdersDataset.sortedRecordIds.length);
+      console.log("saleOrderDetailsDataset records:", saleOrderDetailsDataset.sortedRecordIds.length);
+      
+      // Reset flag loaded nếu MaxRecord thay đổi
+      if (previousMaxRecords !== this._maxRecords) {
+        this._isDataLoaded = false;
+        console.log(`MaxRecord thay đổi từ ${previousMaxRecords} thành ${this._maxRecords}, reset trạng thái tải dữ liệu.`);
+      }
+
+      if (saleOrdersDataset.loading || saleOrderDetailsDataset.loading) {
+        // Đang tải dữ liệu, hiển thị trạng thái loading
+        this._printContent.innerHTML = `
+          <div class="info-message">
+              <p>Đang tải dữ liệu cơ bản...</p>
+          </div>
+        `;
+        return;
+      }
+
+      // Kiểm tra số lượng bản ghi hiện tại với số lượng tối đa
+      const currentRecordCount = saleOrderDetailsDataset.sortedRecordIds.length;
+      const targetRecordCount = this._maxRecords > 0 ? this._maxRecords : 1000;
+      
+      console.log(`Kiểm tra số lượng bản ghi hiện tại: ${currentRecordCount}/${targetRecordCount}`);
+      
+      // Nếu đã đủ số lượng bản ghi hoặc không có trang tiếp theo, xử lý và hiển thị ngay
+      // Thêm kiểm tra đã tải đủ dữ liệu chưa
+      if (currentRecordCount >= targetRecordCount || !saleOrderDetailsDataset.paging.hasNextPage || this._isDataLoaded) {
+        console.log(`[Phiên ${currentSessionId}] Đã có đủ số lượng bản ghi (${currentRecordCount}/${targetRecordCount}) hoặc không còn trang tiếp theo, xử lý dữ liệu luôn.`);
+        
+        // Đánh dấu đã tải đủ dữ liệu
+        this._isDataLoaded = true;
+        
+        this.processAndRenderData(saleOrdersDataset, saleOrderDetailsDataset);
+        return;
+      }
+
+      // Hàm để tải tất cả dữ liệu
+      const loadAllData = async () => {
+        try {
+          // Nếu phiên hiện tại không còn là phiên mới nhất, dừng ngay
+          if (currentSessionId !== this._currentSessionId) {
+            console.log(`[Phiên ${currentSessionId}] Đã bị huỷ bởi phiên mới hơn ${this._currentSessionId}, dừng tải dữ liệu.`);
+            return;
+          }
+          
+          // Ẩn loading indicator tạm thời
+          if (this._loadingIndicator) {
+            this._loadingIndicator.style.display = "none";
+          }
+
+          // Tải thêm dữ liệu từ saleOrderDetailsDataset nếu còn
+          let hasMoreRecords = saleOrderDetailsDataset.paging.hasNextPage;
+          let loadingAttempts = 0;
+          const maxAttempts = 5; // Giới hạn số lần tải để tránh vòng lặp vô hạn
+          const totalRecordsToLoad = this._maxRecords > 0 ? this._maxRecords : 1000; // Mặc định 1000 nếu không có giá trị
+          
+          // Log chi tiết các điều kiện để debug
+          console.log(`[Phiên ${currentSessionId}] ==== ĐIỀU KIỆN TRƯỚC VÒNG LẶP ====`);
+          console.log(`[Phiên ${currentSessionId}] hasMoreRecords:`, hasMoreRecords);
+          console.log(`[Phiên ${currentSessionId}] currentRecordCount:`, saleOrderDetailsDataset.sortedRecordIds.length);
+          console.log(`[Phiên ${currentSessionId}] targetRecordCount:`, totalRecordsToLoad);
+          console.log(`[Phiên ${currentSessionId}] Đã đủ số lượng bản ghi:`, saleOrderDetailsDataset.sortedRecordIds.length >= totalRecordsToLoad);
+          console.log(`[Phiên ${currentSessionId}] ===============================`);
+          
+          // Kiểm tra lại điều kiện trước khi bắt đầu tải
+          if (saleOrderDetailsDataset.sortedRecordIds.length >= totalRecordsToLoad) {
+            console.log(`[Phiên ${currentSessionId}] Đã đủ số lượng bản ghi trước khi bắt đầu tải, xử lý dữ liệu luôn.`);
+            this._isDataLoaded = true;
+            this.processAndRenderData(saleOrdersDataset, saleOrderDetailsDataset);
+            return;
+          }
+          
+          // Hiển thị thông báo đang tải thêm
+          if (hasMoreRecords && saleOrderDetailsDataset.sortedRecordIds.length < totalRecordsToLoad) {
+            console.log(`[Phiên ${currentSessionId}] ĐIỀU KIỆN ĐÃ THỎA MÃN: Cần tải thêm dữ liệu`);
+            
+            this._printContent.innerHTML = `
+              <div class="info-message" style="padding: 20px; text-align: center; background-color: #f8f9fa; border-radius: 5px; margin: 20px 0;">
+                  <h3 style="color: #338da5; margin-bottom: 10px;">Đang tải dữ liệu chi tiết đơn hàng [Phiên ${currentSessionId}]</h3>
+                  <p style="font-size: 16px;">Hiện đã tải: ${saleOrderDetailsDataset.sortedRecordIds.length}/${totalRecordsToLoad} bản ghi</p>
+                  <p style="font-size: 14px; color: #6c757d;">Vui lòng đợi trong giây lát...</p>
+                  <div class="progress-indicator" style="width: 100%; height: 4px; background-color: #e9ecef; margin-top: 15px;">
+                      <div style="width: 10%; height: 100%; background-color: #338da5; animation: progress 2s infinite;"></div>
+                  </div>
+              </div>
+              <style>
+                  @keyframes progress {
+                      0% { width: 10%; }
+                      50% { width: 70%; }
+                      100% { width: 10%; }
+                  }
+              </style>
             `;
-      return;
-    }
-
-    // Ẩn loading indicator
-    if (this._loadingIndicator) {
-      this._loadingIndicator.style.display = "none";
-    }
-
-    // Kiểm tra nếu có dữ liệu
-    if (saleOrdersDataset.sortedRecordIds.length > 0) {
-
-      // Lấy bản ghi đầu tiên từ dataset saleOrders
-      const saleOrderId = saleOrdersDataset.sortedRecordIds[0];
-      const saleOrder = saleOrdersDataset.records[saleOrderId];
-
-      // Log bản ghi đầu tiên để xem cấu trúc chi tiết và các cột có sẵn
-      console.log("===== FIRST RECORDS INSPECTION =====");
-
-      // Đọc giá trị từ bản ghi
-      const orderData: ISaleOrder = {
-        crdfd_sale_orderid: this.getFormattedValue(saleOrder, "crdfd_sale_orderid"),
-        crdfd_name: this.getFormattedValue(saleOrder, "crdfd_name"),
-        crdfd_tenthuongmai_text: this.getFormattedValue(saleOrder, "crdfd_tenthuongmai_text"),
-        crdfd_khachhangtext: this.getFormattedValue(saleOrder, "crdfd_khachhangtext"),
-        crdfd_vatstatus: this.getNumberValue(saleOrder, "crdfd_vatstatus"),
-        createdon: this.getFormattedValue(saleOrder, "createdon"),
-        diachi: this.getFormattedValue(saleOrder, "crdfd_iachitext") || "",
-        sdt: this.getFormattedValue(saleOrder, "crdfd_sttext") || "",
-        ghichu: this.getFormattedValue(saleOrder, "crdfd_notes") || "",
-        dieukhoan: this.getNumberValue(saleOrder, "crdfd_dieu_khoan_thanh_toan"),
-        tinhthanh: this.getFormattedValue(saleOrder, "crdfd_localtext") || ""
+          } else {
+            // Nếu không cần tải thêm, xử lý và hiển thị ngay
+            console.log(`[Phiên ${currentSessionId}] ĐIỀU KIỆN KHÔNG THỎA MÃN: Không cần tải thêm dữ liệu`);
+            this._isDataLoaded = true;
+            this.processAndRenderData(saleOrdersDataset, saleOrderDetailsDataset);
+            return;
+          }
+          
+          // Tiếp tục tải cho đến khi đạt đủ số lượng bản ghi hoặc không còn trang tiếp theo
+          while (
+            hasMoreRecords && 
+            loadingAttempts < maxAttempts && 
+            saleOrderDetailsDataset.sortedRecordIds.length < totalRecordsToLoad &&
+            currentSessionId === this._currentSessionId // Kiểm tra phiên còn hiện hành không
+          ) {
+            console.log(`[Phiên ${currentSessionId}] ==== ĐIỀU KIỆN TRONG VÒNG LẶP - LẦN ${loadingAttempts + 1} ====`);
+            console.log(`[Phiên ${currentSessionId}] hasMoreRecords:`, hasMoreRecords);
+            console.log(`[Phiên ${currentSessionId}] loadingAttempts < maxAttempts:`, loadingAttempts < maxAttempts, `(${loadingAttempts}/${maxAttempts})`);
+            console.log(`[Phiên ${currentSessionId}] currentRecords < targetRecords:`, saleOrderDetailsDataset.sortedRecordIds.length < totalRecordsToLoad, 
+              `(${saleOrderDetailsDataset.sortedRecordIds.length}/${totalRecordsToLoad})`);
+            console.log(`[Phiên ${currentSessionId}] Phiên hiện hành:`, currentSessionId === this._currentSessionId);
+            console.log(`[Phiên ${currentSessionId}] ===============================`);
+            
+            console.log(`[Phiên ${currentSessionId}] Đang tải trang tiếp theo. Lần thử: ${loadingAttempts + 1}/${maxAttempts}`);
+            console.log(`[Phiên ${currentSessionId}] Số bản ghi hiện tại: ${saleOrderDetailsDataset.sortedRecordIds.length}/${totalRecordsToLoad}`);
+            loadingAttempts++;
+            
+            try {
+              // Kiểm tra lại phiên hiện hành trước khi tải
+              if (currentSessionId !== this._currentSessionId) {
+                console.log(`[Phiên ${currentSessionId}] Đã bị huỷ trong quá trình tải, dừng ngay.`);
+                return;
+              }
+              
+              // Thêm đợi 500ms giữa mỗi lần tải để tránh quá tải
+              await new Promise(resolve => setTimeout(resolve, 500));
+              
+              // Kiểm tra lại phiên hiện hành sau khi đợi
+              if (currentSessionId !== this._currentSessionId) {
+                console.log(`[Phiên ${currentSessionId}] Đã bị huỷ sau khi đợi, dừng ngay.`);
+                return;
+              }
+              
+              console.log(`[Phiên ${currentSessionId}] Bắt đầu gọi loadNextPage()...`);
+              await saleOrderDetailsDataset.paging.loadNextPage();
+              
+              // Kiểm tra phiên hiện hành sau khi tải dữ liệu
+              if (currentSessionId !== this._currentSessionId) {
+                console.log(`[Phiên ${currentSessionId}] Đã bị huỷ sau khi tải dữ liệu, dừng ngay.`);
+                return;
+              }
+              
+              console.log(`[Phiên ${currentSessionId}] Đã tải thêm dữ liệu. Tổng số sau khi tải: ${saleOrderDetailsDataset.sortedRecordIds.length}`);
+              
+              // Tính phần trăm hoàn thành
+              const percentComplete = Math.min(
+                100, 
+                Math.round((saleOrderDetailsDataset.sortedRecordIds.length / totalRecordsToLoad) * 100)
+              );
+              
+              // Kiểm tra số lượng bản ghi sau khi tải - nếu bị reset về số nhỏ, có thể đã có phiên mới
+              if (saleOrderDetailsDataset.sortedRecordIds.length < 25) {
+                console.log(`[Phiên ${currentSessionId}] Phát hiện dữ liệu bị reset (${saleOrderDetailsDataset.sortedRecordIds.length} bản ghi), có thể đã có phiên mới.`);
+                return;
+              }
+              
+              // Cập nhật thông báo
+              this._printContent.innerHTML = `
+                <div class="info-message" style="padding: 20px; text-align: center; background-color: #f8f9fa; border-radius: 5px; margin: 20px 0;">
+                    <h3 style="color: #338da5; margin-bottom: 10px;">Đang tải dữ liệu chi tiết đơn hàng [Phiên ${currentSessionId}]</h3>
+                    <p style="font-size: 16px;">Hiện đã tải: ${saleOrderDetailsDataset.sortedRecordIds.length}/${totalRecordsToLoad} bản ghi</p>
+                    <p style="font-size: 14px; color: #6c757d;">Đã tải ${loadingAttempts}/${maxAttempts} trang</p>
+                    <div class="progress-indicator" style="width: 100%; height: 4px; background-color: #e9ecef; margin-top: 15px;">
+                        <div style="width: ${percentComplete}%; height: 100%; background-color: #338da5;"></div>
+                    </div>
+                </div>
+              `;
+              
+              // Kiểm tra xem còn trang tiếp theo không
+              const previousHasMoreRecords = hasMoreRecords;
+              hasMoreRecords = saleOrderDetailsDataset.paging.hasNextPage;
+              console.log(`[Phiên ${currentSessionId}] hasMoreRecords trước/sau: ${previousHasMoreRecords}/${hasMoreRecords}`);
+              
+              // Nếu đã đủ số lượng bản ghi, dừng việc tải
+              if (saleOrderDetailsDataset.sortedRecordIds.length >= totalRecordsToLoad) {
+                console.log(`[Phiên ${currentSessionId}] Đã tải đủ ${totalRecordsToLoad} bản ghi, dừng tải.`);
+                this._isDataLoaded = true;
+                break;
+              }
+            } catch (error) {
+              console.error(`[Phiên ${currentSessionId}] Lỗi khi tải trang tiếp theo:`, error);
+              this._printContent.innerHTML = `
+                <div class="error-message" style="padding: 20px; text-align: center; background-color: #f8d7da; border-radius: 5px; margin: 20px 0;">
+                    <h3 style="color: #721c24; margin-bottom: 10px;">Lỗi khi tải dữ liệu</h3>
+                    <p style="font-size: 16px;">Không thể tải thêm dữ liệu.</p>
+                    <p style="font-size: 14px; color: #6c757d;">Đã tải được ${saleOrderDetailsDataset.sortedRecordIds.length} bản ghi.</p>
+                </div>
+              `;
+              // Đợi 2 giây để người dùng đọc thông báo
+              await new Promise(resolve => setTimeout(resolve, 2000));
+              break;
+            }
+          }
+          
+          // Kiểm tra phiên hiện hành trước khi xử lý dữ liệu
+          if (currentSessionId !== this._currentSessionId) {
+            console.log(`[Phiên ${currentSessionId}] Đã bị huỷ sau khi tải xong dữ liệu, không xử lý dữ liệu.`);
+            return;
+          }
+          
+          // Không cần hiển thị thông báo hoàn tất, chuyển trực tiếp sang xử lý dữ liệu
+          console.log(`[Phiên ${currentSessionId}] Đã tải xong dữ liệu, chuyển sang xử lý.`);
+          
+          // Đánh dấu đã tải đủ dữ liệu
+          this._isDataLoaded = true;
+          
+          // Hiển thị loading indicator lại
+          if (this._loadingIndicator) {
+            this._loadingIndicator.style.display = "block";
+          }
+          
+          // Tiếp tục xử lý dữ liệu sau khi tải xong
+          this.processAndRenderData(saleOrdersDataset, saleOrderDetailsDataset);
+        } catch (error) {
+          console.error(`[Phiên ${currentSessionId}] Lỗi khi tải dữ liệu:`, error);
+          this._printContent.innerHTML = `
+            <div class="error-message" style="padding: 20px; text-align: center; background-color: #f8d7da; border-radius: 5px; margin: 20px 0;">
+                <h3 style="color: #721c24; margin-bottom: 10px;">Lỗi khi tải dữ liệu</h3>
+                <p style="font-size: 16px;">Vui lòng thử lại sau.</p>
+            </div>
+          `;
+        }
       };
-
-      console.log("Final orderData for rendering:", orderData);
-
-      // Lấy tất cả các chi tiết đơn hàng
-      const orderDetails = saleOrderDetailsDataset.sortedRecordIds.map(id => {
-        const detail = saleOrderDetailsDataset.records[id];
-
-        return {
-          productName: this.getFormattedValue(detail, "crdfd_tensanphamtext"),
-          discount: this.getFormattedValue(detail, "crdfd_chieckhau"),
-          quantity: this.getFormattedValue(detail, "crdfd_productnum"),
-          price: this.getFormattedValue(detail, "crdfd_giagoc"),
-          // Thêm các trường thông tin khác
-          deliveryDate: this.getFormattedValue(detail, "crdfd_ngaygiaodukientonghop"),
-          donvitinh: this.getFormattedValue(detail, "crdfd_onvionhang"),
-          discount2: this.getFormattedValue(detail, "crdfd_chieckhau2")
-        };
-      });
-
-      console.log("Final orderDetails for rendering:", orderDetails);
-
-      // Render form với dữ liệu lấy được
-      this.renderForm(orderData, orderDetails);
-    } else {
-      console.warn("Không nhận được dữ liệu từ dataset");
+      
+      // Gọi hàm tải dữ liệu
+      loadAllData();
+      console.log(`===== KẾT THÚC UPDATE VIEW [Phiên ${currentSessionId}] =====`);
+    } catch (error) {
+      console.error("Lỗi không xác định trong updateView:", error);
       this._printContent.innerHTML = `
-                <div class="error-message">
-                    <p>Không có dữ liệu từ dataset. Vui lòng kiểm tra cấu hình dataset trong Canvas App.</p>
-                </div>
-            `;
+        <div class="error-message" style="padding: 20px; text-align: center; background-color: #f8d7da; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #721c24; margin-bottom: 10px;">Lỗi không xác định</h3>
+            <p style="font-size: 16px;">Đã xảy ra lỗi không xác định khi cập nhật giao diện.</p>
+        </div>
+      `;
+    }
+  }
+
+  // Tách phần xử lý và render dữ liệu thành một hàm riêng
+  private processAndRenderData(
+    saleOrdersDataset: ComponentFramework.PropertyTypes.DataSet,
+    saleOrderDetailsDataset: ComponentFramework.PropertyTypes.DataSet
+  ): void {
+    try {
+      console.log("===== BẮT ĐẦU XỬ LÝ DỮ LIỆU =====");
+      // Ẩn loading indicator
+      if (this._loadingIndicator) {
+        this._loadingIndicator.style.display = "none";
+      }
+
+      // Kiểm tra nếu có dữ liệu
+      if (saleOrdersDataset.sortedRecordIds.length > 0) {
+        // Lấy bản ghi đầu tiên từ dataset saleOrders
+        const saleOrderId = saleOrdersDataset.sortedRecordIds[0];
+        const saleOrder = saleOrdersDataset.records[saleOrderId];
+
+        // Log thông tin dataset để debug
+        console.log("===== DATASET INFO =====");
+        console.log("Sale Orders Dataset Total Records:", saleOrdersDataset.sortedRecordIds.length);
+        console.log("Sale Order Details Dataset Total Records:", saleOrderDetailsDataset.sortedRecordIds.length);
+        
+        // Đọc giá trị từ bản ghi
+        const orderData: ISaleOrder = {
+          crdfd_sale_orderid: this.getFormattedValue(saleOrder, "crdfd_sale_orderid"),
+          crdfd_name: this.getFormattedValue(saleOrder, "crdfd_name"),
+          crdfd_tenthuongmai_text: this.getFormattedValue(saleOrder, "crdfd_tenthuongmai_text"),
+          crdfd_khachhangtext: this.getFormattedValue(saleOrder, "crdfd_khachhangtext"),
+          crdfd_vatstatus: this.getNumberValue(saleOrder, "crdfd_vatstatus"),
+          createdon: this.getFormattedValue(saleOrder, "createdon"),
+          diachi: this.getFormattedValue(saleOrder, "crdfd_iachitext") || "",
+          sdt: this.getFormattedValue(saleOrder, "crdfd_sttext") || "",
+          ghichu: this.getFormattedValue(saleOrder, "crdfd_notes") || "",
+          dieukhoan: this.getNumberValue(saleOrder, "crdfd_dieu_khoan_thanh_toan"),
+          tinhthanh: this.getFormattedValue(saleOrder, "crdfd_localtext") || ""
+        };
+
+        // Lấy tất cả các chi tiết đơn hàng
+        // Kiểm tra số lượng bản ghi nhận được
+        const orderDetails: ISaleOrderDetail[] = [];
+        const totalDetails = saleOrderDetailsDataset.sortedRecordIds.length;
+        
+        console.log(`Đang xử lý ${totalDetails} chi tiết đơn hàng`);
+        
+        // Lấy toàn bộ records từ dataset
+        for (let i = 0; i < totalDetails; i++) {
+          const id = saleOrderDetailsDataset.sortedRecordIds[i];
+          const detail = saleOrderDetailsDataset.records[id];
+          
+          orderDetails.push({
+            productName: this.getFormattedValue(detail, "crdfd_tensanphamtext"),
+            discount: this.getFormattedValue(detail, "crdfd_chieckhau"),
+            quantity: this.getFormattedValue(detail, "crdfd_productnum"),
+            price: this.getFormattedValue(detail, "crdfd_giagoc"),
+            deliveryDate: this.getFormattedValue(detail, "crdfd_ngaygiaodukientonghop"),
+            donvitinh: this.getFormattedValue(detail, "crdfd_onvionhang"),
+            discount2: this.getFormattedValue(detail, "crdfd_chieckhau2")
+          });
+        }
+
+        console.log(`Đã xử lý ${orderDetails.length}/${totalDetails} chi tiết đơn hàng`);
+
+        // Render form với dữ liệu lấy được
+        this.renderForm(orderData, orderDetails);
+        
+        // Đảm bảo cuộn xuống cuối để hiển thị hết nội dung
+        setTimeout(() => {
+          const container = document.querySelector('.print-form-container') as HTMLElement;
+          if (container) {
+            container.scrollTop = 0; // Reset scroll position trước
+          }
+        }, 100);
+      } else {
+        console.warn("Không nhận được dữ liệu từ dataset");
+        this._printContent.innerHTML = `
+          <div class="error-message">
+              <p>Không có dữ liệu từ dataset. Vui lòng kiểm tra cấu hình dataset trong Canvas App.</p>
+          </div>
+        `;
+      }
+      console.log("===== KẾT THÚC XỬ LÝ DỮ LIỆU =====");
+    } catch (error) {
+      console.error("Lỗi khi xử lý và hiển thị dữ liệu:", error);
+      this._printContent.innerHTML = `
+        <div class="error-message" style="padding: 20px; text-align: center; background-color: #f8d7da; border-radius: 5px; margin: 20px 0;">
+            <h3 style="color: #721c24; margin-bottom: 10px;">Lỗi khi xử lý dữ liệu</h3>
+            <p style="font-size: 16px;">Đã xảy ra lỗi khi xử lý và hiển thị dữ liệu.</p>
+        </div>
+      `;
     }
   }
 

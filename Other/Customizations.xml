@@ -8,7 +8,7 @@
     <Descriptions>
       <Description description="Component PCF để in đơn hàng trong hệ thống Wecare" languagecode="1033" />
     </Descriptions>
-    <Version>2.0.1</Version>
+    <Version>2.0.3</Version>
     <Managed>false</Managed>
     <Publisher>
       <UniqueName>wecare</UniqueName>
