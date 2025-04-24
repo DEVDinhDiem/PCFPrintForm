@@ -3,6 +3,7 @@ import { IInputs, IOutputs } from "./generated/ManifestTypes";
 
 // Interface cho Sale Order
 interface ISaleOrder {
+  crdfd_sale_orderid: string;
   crdfd_name: string;
   crdfd_tenthuongmai_text: string;
   crdfd_khachhangtext: string;
@@ -99,6 +100,30 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
     mainContainer.appendChild(this._loadingIndicator);
     mainContainer.appendChild(this._printContent);
     this._container.appendChild(mainContainer);
+
+    // Thêm style cho container chính
+    const containerStyle = document.createElement("style");
+    containerStyle.innerHTML = `
+      .print-form-container {
+        width: 90%;
+        height: 100vh;
+        margin: 0 auto;
+        overflow-y: auto;
+        padding: 10px;
+      }
+      
+      .loading-indicator {
+        text-align: center;
+        padding: 20px;
+        font-size: 16px;
+        color: #338da5;
+      }
+      
+      .print-content {
+        width: 100%;
+      }
+    `;
+    document.head.appendChild(containerStyle);
   }
 
   private renderForm(saleOrder: ISaleOrder, saleOrderDetails: ISaleOrderDetail[]): void {
@@ -157,7 +182,7 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
         .container {
           width: 100%;
           margin: 0;
-          padding: 0;
+          padding: 0 1mm !important; /* Giảm padding khi in */
         }
         
         .no-print {
@@ -166,7 +191,7 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
         
         @page {
           size: A4;
-          margin: 10mm;
+          margin: 5mm; /* Giảm margin khi in */
         }
         
         table {
@@ -192,10 +217,21 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
         body {
           margin: 0;
           padding: 0;
+          height: 100vh;
+          overflow: hidden;
+        }
+        
+        .print-form-container {
+          width: 90%;
+          height: 100vh;
+          margin: 0 auto;
+          overflow-y: auto; /* Thêm thanh cuộn dọc */
+          padding: 10px;
         }
         
         .container {
-          max-width: 21cm; /* Độ rộng của trang A4 */
+          width: 100%; /* Container chiếm toàn bộ độ rộng của parent */
+          max-width: none;
           margin: 0 auto;
           padding: 10px;
           background: white;
@@ -208,6 +244,39 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
         #colorTitle {
           background-color: #338da5 !important;
           color: #ffffff !important;
+        }
+        
+        /* Style cho nút In và Xuất PDF */
+        .action-buttons {
+          display: flex;
+          justify-content: flex-end;
+          margin-bottom: 10px;
+        }
+        
+        .btn-action {
+          padding: 8px 15px;
+          margin-left: 10px;
+          border: none;
+          border-radius: 4px;
+          font-weight: bold;
+          cursor: pointer;
+          font-size: 14px;
+          transition: all 0.3s ease;
+        }
+        
+        .btn-print {
+          background-color: #338da5;
+          color: white;
+        }
+        
+        .btn-export-pdf {
+          background-color: #d9534f;
+          color: white;
+        }
+        
+        .btn-action:hover {
+          opacity: 0.85;
+          transform: translateY(-2px);
         }
       }
       
@@ -235,7 +304,7 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
 </head>
 
 <body>
-    <div class='container' style='font-family: undefined; max-width: 21cm; margin: 0 auto; background: white;'>
+    <div class='container' style='font-family: undefined; width: 100%; margin: 0 auto; background: white;'>
       <div class="action-buttons no-print">
         <button id="btnPrint" class="btn-action btn-print">In</button>
         <button id="btnClick" class="btn-action btn-export-pdf">Xuất PDF</button>
@@ -443,33 +512,143 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
   }
 
   // Phương thức tạo JavaScript
-  // Phương thức tạo JavaScript
-private generateFormScript(saleOrder: ISaleOrder, saleOrderDetails: ISaleOrderDetail[]): string {
-  return `
+  private generateFormScript(saleOrder: ISaleOrder, saleOrderDetails: ISaleOrderDetail[]): string {
+    return `
 function myFunction() {
-    // Lấy phần tử container chứa form
+    // Gọi hàm xuất PDF sử dụng phương pháp giống hàm in
+    exportToPdf();
+}
+
+function exportToPdf() {
+    // Lấy nội dung hiện tại của form
     var element = document.querySelector('.container');
-    
     if (!element) {
         console.error('Không tìm thấy form container');
         return;
     }
 
-    var opt = {
-        margin: 1,
-        filename: '${saleOrder.crdfd_name || "DonHang"}.pdf',
-        image: { type: 'jpeg', quality: 0.98 },
-        html2canvas: { 
-            scale: 2,
-            // Chỉ chụp phần tử container
-            windowWidth: element.offsetWidth,
-            windowHeight: element.offsetHeight
-        },
-        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    // Tạo một iframe mới
+    var printFrame = document.createElement('iframe');
+    printFrame.style.visibility = 'hidden';
+    printFrame.style.position = 'fixed';
+    printFrame.style.right = '0';
+    printFrame.style.bottom = '0';
+    printFrame.style.width = '0';
+    printFrame.style.height = '0';
+    document.body.appendChild(printFrame);
+
+    // Ghi nội dung vào iframe
+    var frameDoc = printFrame.contentWindow.document;
+    frameDoc.open();
+    frameDoc.write('<!DOCTYPE html><html><head>');
+    
+    // Copy các style từ trang gốc
+    document.querySelectorAll('style, link[rel="stylesheet"]').forEach(styleSheet => {
+        frameDoc.write(styleSheet.outerHTML);
+    });
+    
+    // Thêm style đặc biệt cho iframe
+    frameDoc.write(\`
+        <style>
+            @page {
+                size: A4;
+                margin: 5mm;
+            }
+            body {
+                margin: 0;
+                padding: 0;
+            }
+            .container {
+                width: 100% !important;
+                max-width: none !important;
+                margin: 0 !important;
+                padding: 0 1mm !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+        </style>
+    \`);
+    
+    frameDoc.write('</head><body>');
+    frameDoc.write(element.outerHTML);
+    frameDoc.write('</body></html>');
+    frameDoc.close();
+    
+    // Thêm thư viện html2pdf vào iframe
+    var script = frameDoc.createElement('script');
+    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+    script.onload = function() {
+        // Khi thư viện đã tải xong, xuất PDF
+        try {
+            var content = frameDoc.querySelector('.container');
+            var opt = {
+                margin: 1,
+                filename: '${saleOrder.crdfd_name || "DonHang"}.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            
+            // Sử dụng setTimeout để đảm bảo tất cả nội dung đã render
+            setTimeout(function() {
+                // Tạo PDF và gửi lên API
+                frameDoc.defaultView.html2pdf().from(content).set(opt).outputPdf('datauristring').then(function(pdfBase64) {
+                    // Gửi PDF lên API
+                    sendPdfToApi(pdfBase64, '${saleOrder.crdfd_sale_orderid|| "ID123"}', '${saleOrder.crdfd_name|| "DonHang"}.pdf');
+                    
+                    // Sau đó tải xuống PDF
+                    frameDoc.defaultView.html2pdf().from(content).set(opt).save().then(function() {
+                        // Xóa iframe sau khi xuất PDF xong
+                        setTimeout(function() {
+                            document.body.removeChild(printFrame);
+                        }, 1000);
+                    });
+                });
+            }, 500);
+        } catch (e) {
+            console.error('Lỗi khi xuất PDF:', e);
+            document.body.removeChild(printFrame);
+        }
+    };
+    frameDoc.body.appendChild(script);
+}
+
+function sendPdfToApi(pdfDataUri, saleOrderId, SOName) {
+    // Loại bỏ phần đầu 'data:application/pdf;base64,' để lấy chuỗi base64 thuần túy
+    var base64Data = pdfDataUri.split(',')[1] || pdfDataUri;
+    
+    // Tạo dữ liệu để gửi đi
+    var postData = {
+        "File_Name": SOName,
+        "ID_SO": saleOrderId,
+        "File": base64Data
     };
     
-    // Sử dụng html2pdf để xuất file PDF
-    html2pdf().from(element).set(opt).save();
+    // URL API
+    var apiUrl = "https://prod-62.southeastasia.logic.azure.com:443/workflows/b0681ade249043eeb8f69b786b78cd64/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=t6bBO3XN_UKAKWmRjt-A9GjYoU-U_pyfDxcSTVXFhw0";
+    
+    // Gửi request bằng fetch API
+    fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(postData)
+    })
+    .then(response => {
+        if (response.ok) {
+            console.log('PDF đã được gửi thành công đến API');
+            return response.json();
+        }
+        throw new Error('Gửi PDF thất bại');
+    })
+    .then(data => {
+        console.log('Kết quả từ API:', data);
+    })
+    .catch(error => {
+        console.error('Lỗi khi gửi API:', error);
+    });
 }
 
 function handlePrint() {
@@ -505,7 +684,7 @@ function handlePrint() {
         <style>
             @page {
                 size: A4;
-                margin: 10mm;
+                margin: 5mm;
             }
             body {
                 margin: 0;
@@ -515,7 +694,10 @@ function handlePrint() {
                 width: 100% !important;
                 max-width: none !important;
                 margin: 0 !important;
-                padding: 0 !important;
+                padding: 0 1mm !important;
+            }
+            .no-print {
+                display: none !important;
             }
         </style>
     \`);
@@ -572,7 +754,7 @@ function addHtml2PdfLib() {
 // Gọi hàm thêm thư viện
 addHtml2PdfLib();
   `;
-}
+  }
 
   // Phương thức tạo HTML cho chi tiết đơn hàng
   private renderOrderDetailsRows(details: ISaleOrderDetail[]): string {
@@ -801,6 +983,7 @@ addHtml2PdfLib();
 
       // Đọc giá trị từ bản ghi
       const orderData: ISaleOrder = {
+        crdfd_sale_orderid: this.getFormattedValue(saleOrder, "crdfd_sale_orderid"),
         crdfd_name: this.getFormattedValue(saleOrder, "crdfd_name"),
         crdfd_tenthuongmai_text: this.getFormattedValue(saleOrder, "crdfd_tenthuongmai_text"),
         crdfd_khachhangtext: this.getFormattedValue(saleOrder, "crdfd_khachhangtext"),
