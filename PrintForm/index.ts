@@ -4,8 +4,8 @@ import { IInputs, IOutputs } from "./generated/ManifestTypes";
 // Interface cho Sale Order
 interface ISaleOrder {
   crdfd_name: string;
-  crdfd_khachhangtext: string;
   crdfd_tenthuongmai_text: string;
+  crdfd_khachhangtext: string;
   crdfd_vatstatus: number;
   createdon: string;
   diachi?: string;
@@ -63,8 +63,6 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
     container: HTMLDivElement
   ): void {
     console.log("=== Component đang khởi tạo ===");
-    console.log("Context mode:", context.mode);
-    console.log("IDBanHang value:", context.parameters.IDBanHang.raw);
 
     this._context = context;
     this._container = container;
@@ -72,9 +70,7 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
     this._IDBanHang = context.parameters.IDBanHang.raw || "";
 
     // Tạo UI
-    console.log("Bắt đầu tạo UI...");
     this.createUI();
-    console.log("Đã tạo UI xong");
   }
 
   private createUI(): void {
@@ -84,8 +80,8 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
 
     // Tạo button Print
     this._printButton = document.createElement("button");
-    this._printButton.innerHTML = "In";
-    this._printButton.className = "print-button";
+    // this._printButton.innerHTML = "In";
+    // this._printButton.className = "print-button";
     this._printButton.onclick = this.handlePrint.bind(this);
 
     // Tạo loading indicator
@@ -103,85 +99,12 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
     mainContainer.appendChild(this._loadingIndicator);
     mainContainer.appendChild(this._printContent);
     this._container.appendChild(mainContainer);
-
-    console.log("Bắt đầu render form xem trước...");
-
-    // Hiển thị mẫu form ngay lập tức để xem trước
-    // try {
-    //     this.renderPreviewForm();
-    //     console.log("Render form xem trước thành công");
-    // } catch (error1) {
-    //     console.error("Lỗi khi render form xem trước:", error1);
-    //     this._printContent.innerHTML = `
-    //         <div class="error-message">
-    //             <p>Đã xảy ra lỗi khi hiển thị form xem trước: ${error1}</p>
-    //         </div>
-    //     `;
-    // }
   }
 
-  // private renderPreviewForm(): void {
-  //     console.log("Đang tạo dữ liệu mẫu...");
-
-  //     // Dữ liệu mẫu cho đơn hàng
-  //     const sampleOrder: ISaleOrder = {
-  //         crdfd_name: "SO-12345",
-  //         crdfd_khachhangtext: "Công Ty TNHH ABC",
-  //         crdfd_tenthuongmai_text: "WECARE",
-  //         crdfd_vatstatus: 191920000,
-  //         createdon: new Date().toISOString(),
-  //         diachi: "123 Đường Lê Lợi, Phường Bến Nghé, Quận 1, TP.HCM",
-  //         sdt: "0987654321",
-  //         ghichu: "Giao hàng trong giờ hành chính",
-  //         dieukhoan: 283640000,
-  //         tinhthanh: "Sài Gòn"
-  //     };
-
-  //     // Dữ liệu mẫu cho chi tiết đơn hàng
-  //     const sampleDetails: ISaleOrderDetail[] = [
-  //         {
-  //             productName: "Keo Silicone Chịu Nhiệt",
-  //             discount: "0.05",
-  //             quantity: "10",
-  //             price: "150000",
-  //             deliveryDate: new Date(new Date().setDate(new Date().getDate() + 7)).toISOString(),
-  //             donvitinh: "Tuýp",
-  //             discount2: "0"
-  //         },
-  //         {
-  //             productName: "Băng Keo Cách Điện",
-  //             discount: "0.1",
-  //             quantity: "20",
-  //             price: "75000",
-  //             deliveryDate: new Date(new Date().setDate(new Date().getDate() + 5)).toISOString(),
-  //             donvitinh: "Cuộn",
-  //             discount2: "0.02"
-  //         },
-  //         {
-  //             productName: "Keo Dán Đa Năng",
-  //             discount: "0",
-  //             quantity: "5",
-  //             price: "250000",
-  //             deliveryDate: new Date(new Date().setDate(new Date().getDate() + 3)).toISOString(),
-  //             donvitinh: "Chai",
-  //             discount2: "0"
-  //         }
-  //     ];
-
-  //     console.log("Dữ liệu mẫu đã tạo, bắt đầu render form...");
-
-  //     // Render form với dữ liệu mẫu
-  //     this.renderForm(sampleOrder, sampleDetails);
-  // }
-
   private renderForm(saleOrder: ISaleOrder, saleOrderDetails: ISaleOrderDetail[]): void {
-    console.log("Rendering form with:", saleOrder);
-    console.log("Rendering form with saleOrderDetails:", saleOrderDetails);
-
-
+    
     // Kiểm tra trạng thái VAT
     const vatStatus = saleOrder.crdfd_vatstatus;
-    console.log("VAT Status:", vatStatus);
     const isVATApplicable = vatStatus === 283640000;
 
     // Lấy điều kiện thanh toán
@@ -269,7 +192,7 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
         body {
           zoom: 85%;
         }
-        #btnClick {
+        .no-print {
           display: none !important;
         }
       }
@@ -280,14 +203,40 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
           color: #ffffff !important;
         }
       }
+      
+      .btn-action {
+        padding: 10px 15px;
+        margin: 10px 5px;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: bold;
+        font-size: 16px;
+      }
+      
+      .btn-print {
+        background-color: #337ab7;
+        color: white;
+      }
+      
+      .btn-export-pdf {
+        background-color: #d9534f;
+        color: white;
+      }
+      
+      .action-buttons {
+        text-align: center;
+        margin: 20px 0;
+      }
     </style>
 </head>
 
 <body>
     <div class='container' style='font-family: undefined'>
-      <button id='btnClick' style='display: block; font-size: 20px' class='btn btn-primary'>
-        In
-      </button>
+      <div class="action-buttons no-print">
+        <button id="btnPrint" class="btn-action btn-print" onclick="window.print()">In</button>
+        <button id="btnClick" class="btn-action btn-export-pdf">Xuất PDF</button>
+      </div>
       <div class='row'>
         <div class='table-responsive'>
           <table class='table'>
@@ -494,28 +443,97 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
   private generateFormScript(saleOrder: ISaleOrder, saleOrderDetails: ISaleOrderDetail[]): string {
     return `
 function myFunction() {
-    var yourDOCTYPE = '<!DOCTYPE html...';
-    var rs = '<html>' + document.documentElement.innerHTML + '</html>';
-    var result = rs
-        .replace('block', 'none')
-        .replace('block', 'none')
-        .replace('block', 'none')
-        .replace('block', 'none');
+    // Lấy phần tử container chứa form
+    var element = document.querySelector('.container');
     
-    var printPreview = window.open('about:blank_ban', 'print_preview');
-    var printDocument = printPreview.document;
-    printDocument.open();
-    printDocument.write(result);
-    printDocument.close();
+    if (!element) {
+        console.error('Không tìm thấy form container');
+        return;
+    }
+
+    var opt = {
+        margin: 1,
+        filename: '${saleOrder.crdfd_name || "DonHang"}.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: { 
+            scale: 2,
+            // Chỉ chụp phần tử container
+            windowWidth: element.offsetWidth,
+            windowHeight: element.offsetHeight
+        },
+        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    };
     
-    setTimeout(() => {
-        printPreview.print();
-    }, 500);
+    // Sử dụng html2pdf để xuất file PDF
+    html2pdf().from(element).set(opt).save();
 }
 
-// Gắn sự kiện click cho nút in
-document.getElementById('btnClick').addEventListener('click', myFunction);
-    `;
+function handlePrint() {
+    // Lấy nội dung hiện tại của form
+    var element = document.querySelector('.container');
+    if (!element) {
+        console.error('Không tìm thấy form container');
+        return;
+    }
+
+    // Tạo một div mới để chứa nội dung in
+    var printContent = element.cloneNode(true);
+    
+    // Tạo một iframe mới
+    var printFrame = document.createElement('iframe');
+    printFrame.style.position = 'absolute';
+    printFrame.style.left = '-9999px';
+    document.body.appendChild(printFrame);
+    
+    // Ghi nội dung vào iframe
+    var frameDoc = printFrame.contentWindow.document;
+    frameDoc.open();
+    frameDoc.write('<html><head>');
+    
+    // Copy các style từ trang gốc
+    document.querySelectorAll('style, link[rel="stylesheet"]').forEach(styleSheet => {
+        frameDoc.write(styleSheet.outerHTML);
+    });
+    
+    frameDoc.write('</head><body>');
+    frameDoc.write(printContent.outerHTML);
+    frameDoc.write('</body></html>');
+    frameDoc.close();
+    
+    // Đợi tải xong các resource
+    printFrame.onload = function() {
+        printFrame.contentWindow.focus();
+        printFrame.contentWindow.print();
+        
+        // Xóa iframe sau khi in xong
+        setTimeout(function() {
+            document.body.removeChild(printFrame);
+        }, 500);
+    };
+}
+
+// Thêm thư viện html2pdf vào trang
+function addHtml2PdfLib() {
+    if (!document.getElementById('html2pdf-script')) {
+        var script = document.createElement('script');
+        script.id = 'html2pdf-script';
+        script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+        script.onload = function() {
+            // Khi thư viện đã tải xong, gắn sự kiện cho nút
+            document.getElementById('btnClick').addEventListener('click', myFunction);
+            document.getElementById('btnPrint').addEventListener('click', handlePrint);
+        };
+        document.head.appendChild(script);
+    } else {
+        // Nếu thư viện đã tồn tại, chỉ gắn sự kiện
+        document.getElementById('btnClick').addEventListener('click', myFunction);
+        document.getElementById('btnPrint').addEventListener('click', handlePrint);
+    }
+}
+
+// Gọi hàm thêm thư viện
+addHtml2PdfLib();
+  `;
   }
 
   // Phương thức tạo HTML cho chi tiết đơn hàng
@@ -697,7 +715,8 @@ document.getElementById('btnClick').addEventListener('click', myFunction);
   }
 
   private handlePrint(): void {
-    window.print();
+    // Chức năng in sẽ được xử lý trong generateFormHTML và generateFormScript
+    console.log("Nút in đã được nhấn");
   }
 
   /**
@@ -716,11 +735,6 @@ document.getElementById('btnClick').addEventListener('click', myFunction);
     // Truy cập dữ liệu từ dataset
     const saleOrdersDataset = context.parameters.saleOrders;
     const saleOrderDetailsDataset = context.parameters.saleOrderDetails;
-
-    // Log toàn bộ datasets để kiểm tra cấu trúc
-    console.log("===== DATASETS INFO =====");
-    console.log("SaleOrders Dataset:", JSON.stringify(saleOrdersDataset, null, 2));
-    console.log("SaleOrderDetails Dataset:", JSON.stringify(saleOrderDetailsDataset, null, 2));
 
     if (saleOrdersDataset.loading || saleOrderDetailsDataset.loading) {
       // Đang tải dữ liệu, hiển thị trạng thái loading
@@ -746,26 +760,14 @@ document.getElementById('btnClick').addEventListener('click', myFunction);
 
       // Log bản ghi đầu tiên để xem cấu trúc chi tiết và các cột có sẵn
       console.log("===== FIRST RECORDS INSPECTION =====");
-      console.log("First SaleOrder Record ID:", saleOrderId);
-      console.log("First SaleOrder Record:", saleOrder);
-
-      // Kiểm tra dữ liệu chi tiết đơn hàng
-      if (saleOrderDetailsDataset.sortedRecordIds.length > 0) {
-        const detailId = saleOrderDetailsDataset.sortedRecordIds[0];
-        const detailRecord = saleOrderDetailsDataset.records[detailId];
-
-        console.log("First SaleOrderDetail Record ID:", detailId);
-        console.log("First SaleOrderDetail Record:", detailRecord);
-      }
 
       // Đọc giá trị từ bản ghi
       const orderData: ISaleOrder = {
         crdfd_name: this.getFormattedValue(saleOrder, "crdfd_name"),
-        crdfd_khachhangtext: this.getFormattedValue(saleOrder, "crdfd_khachhangtext"),
         crdfd_tenthuongmai_text: this.getFormattedValue(saleOrder, "crdfd_tenthuongmai_text"),
+        crdfd_khachhangtext: this.getFormattedValue(saleOrder, "crdfd_khachhangtext"),
         crdfd_vatstatus: this.getNumberValue(saleOrder, "crdfd_vatstatus"),
         createdon: this.getFormattedValue(saleOrder, "createdon"),
-        // Thêm các trường thông tin khác
         diachi: this.getFormattedValue(saleOrder, "crdfd_iachitext") || "",
         sdt: this.getFormattedValue(saleOrder, "crdfd_sttext") || "",
         ghichu: this.getFormattedValue(saleOrder, "crdfd_notes") || "",
@@ -778,9 +780,6 @@ document.getElementById('btnClick').addEventListener('click', myFunction);
       // Lấy tất cả các chi tiết đơn hàng
       const orderDetails = saleOrderDetailsDataset.sortedRecordIds.map(id => {
         const detail = saleOrderDetailsDataset.records[id];
-
-        // Log chi tiết từng bản ghi
-        console.log(`Detail Record ${id}:`, detail);
 
         return {
           productName: this.getFormattedValue(detail, "crdfd_tensanphamtext"),
