@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<ImportExportXml version="9.2.23111.209" SolutionPackageVersion="9.2" languagecode="1033" generatedBy="CrmLive" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <SolutionManifest>
+    <UniqueName>PrintFormComponent</UniqueName>
+    <LocalizedNames>
+      <LocalizedName description="Form In Đơn Hàng Wecare" languagecode="1033" />
+    </LocalizedNames>
+    <Descriptions>
+      <Description description="Component PCF để in đơn hàng trong hệ thống Wecare" languagecode="1033" />
+    </Descriptions>
+    <Version>2.0.1</Version>
+    <Managed>false</Managed>
+    <Publisher>
+      <UniqueName>wecare</UniqueName>
+      <LocalizedNames>
+        <LocalizedName description="Wecare" languagecode="1033" />
+      </LocalizedNames>
+      <Descriptions>
+        <Description description="Wecare Publisher" languagecode="1033" />
+      </Descriptions>
+      <EMailAddress></EMailAddress>
+      <SupportingWebsiteUrl>https://wecare.com.vn</SupportingWebsiteUrl>
+      <CustomizationPrefix>wec</CustomizationPrefix>
+      <CustomizationOptionValuePrefix>10000</CustomizationOptionValuePrefix>
+      <Addresses>
+        <Address>
+          <AddressNumber>1</AddressNumber>
+          <AddressTypeCode>1</AddressTypeCode>
+          <City>Quy Nhơn</City>
+          <County>Bình Định</County>
+          <Country>Việt Nam</Country>
+          <Fax></Fax>
+          <FreightTermsCode>1</FreightTermsCode>
+          <ImportSequenceNumber></ImportSequenceNumber>
+          <Latitude></Latitude>
+          <Line1>Lô B39 Khu công nghiệp Phú Tài, phường Trần Quang Diệu</Line1>
+          <Line2></Line2>
+          <Line3></Line3>
+          <Longitude></Longitude>
+          <Name>Wecare</Name>
+          <PostalCode></PostalCode>
+          <PostOfficeBox></PostOfficeBox>
+          <PrimaryContactName></PrimaryContactName>
+          <ShippingMethodCode>1</ShippingMethodCode>
+          <StateOrProvince>Bình Định</StateOrProvince>
+          <Telephone1>037 833 9009</Telephone1>
+          <Telephone2></Telephone2>
+          <Telephone3></Telephone3>
+          <TimeZoneRuleVersionNumber></TimeZoneRuleVersionNumber>
+          <UPSZone></UPSZone>
+          <UTCOffset></UTCOffset>
+          <UTCConversionTimeZoneCode></UTCConversionTimeZoneCode>
+        </Address>
+      </Addresses>
+    </Publisher>
+    <RootComponents>
+      <RootComponent type="66" schemaName="WecareNamespace.PrintForm" behavior="0" />
+    </RootComponents>
+    <MissingDependencies />
+  </SolutionManifest>
+</ImportExportXml>

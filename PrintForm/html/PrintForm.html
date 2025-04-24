@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form In Đơn Hàng Wecare</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+</head>
+<body>
+    <div id="print-form-template" style="display: none;">
+        <div class="container">
+            <button id="btnPrint" class="print-button">In</button>
+            
+            <!-- HEADER: LOGO VÀ THÔNG TIN CÔNG TY -->
+            <div class="row" style="display: flex; align-items: center;">
+                <div style="width: 20%; float: left;">
+                    <img src="https://wecare-ii.crm5.dynamics.com/WebResources/crdfd_logo" 
+                        style="width: 100px; height: 100px;">
+                </div>
+                <div style="width: 30%; float: left; text-align: left;">
+                    <h2 style="font-weight: bold; margin: 0;" id="company-name"></h2>
+                </div>
+                <div style="width: 50%; float: right; text-align: right;">
+                    <p style="margin: 0; font-weight: bold;" id="company-title"></p>
+                    <p style="margin: 0;">Địa chỉ: Lô B39 Khu công nghiệp Phú Tài, phường</p>
+                    <p style="margin: 0;">Trần Quang Diệu, Quy Nhơn, Bình Định</p>
+                    <p style="margin: 0;">Số điện thoại: 037 833 9009</p>
+                    <p style="margin: 0;">MST: 4101562154</p>
+                    <p style="margin: 0;">Website: https://wecare.com.vn</p>
+                    <p style="margin: 0;">Quy Nhơn, <span id="current-date"></span></p>
+                </div>
+                <div style="clear: both;"></div>
+            </div>
+            
+            <!-- MÃ ĐƠN HÀNG -->
+            <div class="row" style="margin-top: 20px;">
+                <div style="width: 100%; background-color: #338da5; color: white; text-align: center; padding: 8px 0;">
+                    <h3 style="margin: 0; font-weight: bold;" id="order-code"></h3>
+                </div>
+            </div>
+            
+            <!-- THÔNG TIN KHÁCH HÀNG -->
+            <div class="row" style="margin-top: 10px;">
+                <div style="width: 70%; float: left; text-align: left;">
+                    <p style="margin: 0; font-size: 16px;">Tên khách hàng: <span style="font-weight: bold;" id="customer-name"></span></p>
+                </div>
+                <div style="width: 30%; float: right; text-align: left;">
+                    <p style="margin: 0; font-size: 16px;">SĐT: <span id="customer-phone"></span></p>
+                </div>
+                <div style="clear: both;"></div>
+                <div style="width: 100%; text-align: left; margin-top: 5px;">
+                    <p style="margin: 0; font-size: 16px;">Địa chỉ: <span id="customer-address"></span></p>
+                </div>
+            </div>
+            
+            <!-- BẢNG CHI TIẾT ĐƠN HÀNG -->
+            <div class="row" style="margin-top: 20px;">
+                <table style="width: 100%; border-collapse: collapse; border: 1px solid #000;">
+                    <thead>
+                        <tr style="background-color: #338da5; color: white;">
+                            <th style="border: 1px solid #000; padding: 5px; text-align: center;">STT</th>
+                            <th style="border: 1px solid #000; padding: 5px; text-align: center;">Tên sản phẩm</th>
+                            <th style="border: 1px solid #000; padding: 5px; text-align: center;">VAT</th>
+                            <th style="border: 1px solid #000; padding: 5px; text-align: center;">CK1</th>
+                            <th style="border: 1px solid #000; padding: 5px; text-align: center;">CK2</th>
+                            <th style="border: 1px solid #000; padding: 5px; text-align: center;">ĐVT</th>
+                            <th style="border: 1px solid #000; padding: 5px; text-align: center;">Số lượng</th>
+                            <th style="border: 1px solid #000; padding: 5px; text-align: center;">Đơn giá</th>
+                            <th style="border: 1px solid #000; padding: 5px; text-align: center;">Đơn giá sau CK</th>
+                            <th style="border: 1px solid #000; padding: 5px; text-align: center;">Thành tiền</th>
+                            <th style="border: 1px solid #000; padding: 5px; text-align: center;">Ngày giao dự kiến</th>
+                        </tr>
+                    </thead>
+                    <tbody id="order-details">
+                        <!-- Các chi tiết đơn hàng sẽ được thêm vào đây -->
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="8" style="border: 1px solid #000; padding: 5px; text-align: right;">TỔNG GIÁ TRỊ ĐƠN HÀNG</td>
+                            <td colspan="2" style="border: 1px solid #000; padding: 5px; text-align: right;" id="total-value"></td>
+                            <td style="border: 1px solid #000;"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="8" style="border: 1px solid #000; padding: 5px; text-align: right;">CHIẾT KHẤU ORDER</td>
+                            <td colspan="2" style="border: 1px solid #000; padding: 5px; text-align: right;" id="order-discount"></td>
+                            <td style="border: 1px solid #000;"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="8" style="border: 1px solid #000; padding: 5px; text-align: right;">VAT</td>
+                            <td colspan="2" style="border: 1px solid #000; padding: 5px; text-align: right;" id="vat-amount"></td>
+                            <td style="border: 1px solid #000;"></td>
+                        </tr>
+                        <tr>
+                            <td colspan="8" style="border: 1px solid #000; padding: 5px; text-align: right;">TỔNG TIỀN</td>
+                            <td colspan="2" style="border: 1px solid #000; padding: 5px; text-align: right;" id="final-total"></td>
+                            <td style="border: 1px solid #000;"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            
+            <!-- GHI CHÚ -->
+            <div class="row" style="margin-top: 10px;">
+                <p style="margin: 0; font-size: 16px;">* Ghi chú: <span id="order-note"></span></p>
+            </div>
+            
+            <!-- THÔNG TIN THANH TOÁN VÀ GIAO HÀNG -->
+            <div class="row" style="margin-top: 20px; display: flex;">
+                <div style="width: 33%; float: left;">
+                    <h4 style="margin: 0; font-weight: bold;">Điều khoản thanh toán</h4>
+                    <p style="margin: 5px 0;" id="payment-term"></p>
+                    <div id="bank-info"></div>
+                </div>
+                <div style="width: 33%; float: left; text-align: center;">
+                    <h4 style="margin: 0; font-weight: bold;">Ngày đặt hàng</h4>
+                    <p style="margin: 5px 0;" id="order-date"></p>
+                </div>
+                <div style="width: 33%; float: left; text-align: center;">
+                    <h4 style="margin: 0; font-weight: bold;">Thời gian giao hàng dự kiến</h4>
+                </div>
+                <div style="clear: both;"></div>
+            </div>
+            
+            <!-- VỀ WECARE -->
+            <div class="row" style="margin-top: 20px;" id="about-wecare">
+                <!-- Nội dung về Wecare sẽ được thêm vào đây -->
+            </div>
+            
+            <!-- CHỮ KÝ VÀ QR CODE -->
+            <div class="row" style="margin-top: 20px; display: flex;">
+                <div style="width: 33%; float: left; text-align: center;">
+                    <img src="https://wecare-ii.crm5.dynamics.com/WebResources/new_qrcodenew" 
+                         style="width: 100px; height: 100px">
+                    <p style="margin: 5px 0;">https://wecare.com.vn</p>
+                </div>
+                <div style="width: 33%; float: left; text-align: center;">
+                    <h4 style="margin: 0; font-weight: bold;">Bên mua</h4>
+                </div>
+                <div style="width: 33%; float: left; text-align: center;">
+                    <h4 style="margin: 0; font-weight: bold;">Bên bán</h4>
+                    <br><br><br><br><br>
+                </div>
+                <div style="clear: both;"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div id="container" class="print-form-container">
+        <!-- Nội dung sẽ được thêm vào đây bởi JavaScript -->
+    </div>
+</body>
+</html>
