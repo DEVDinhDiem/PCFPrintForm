@@ -25,6 +25,8 @@ interface ISaleOrderDetail {
   deliveryDate?: string;
   donvitinh?: string;
   discount2?: string;
+  ieuchinhgtgt?: number; // Thêm trường điều chỉnh GTGT
+  chieckhauvn?: number; // Thêm trường chiết khấu VND
 }
 
 // Interface cho Contact
@@ -944,32 +946,73 @@ addHtml2PdfLib();
 
     details.forEach((detail, index) => {
       const quantity = parseFloat(detail.quantity) || 0;
-      const price = parseFloat(detail.price) || 0;
-      const discount1 = parseFloat(detail.discount) || 0;
-      const discount2 = parseFloat(detail.discount2 || '0') || 0;
-
-      // Tính giá sau chiết khấu 1
-      const priceAfterDiscount1 = price * (1 - discount1);
-
-      // Tính giá sau chiết khấu 2
-      const priceAfterDiscount2 = priceAfterDiscount1 * (1 - discount2);
-
-      // Tính thành tiền
+      const originalPrice = parseFloat(detail.price) || 0;
+      const discount1Percentage = parseFloat(detail.discount) || 0;
+      const discount2Percentage = parseFloat(detail.discount2 || '0') || 0;
+      const chieckhauvn = detail.chieckhauvn || 0;
+      
+      // Tính tiền chiết khấu 1
+      const discountAmount1 = originalPrice * discount1Percentage;
+      
+      // Giá sau chiết khấu 1
+      const priceAfterDiscount1 = originalPrice - discountAmount1;
+      
+      // Tính tiền chiết khấu 2
+      const discountAmount2 = priceAfterDiscount1 * discount2Percentage;
+      
+      // Giá sau chiết khấu 2
+      const priceAfterDiscount2 = priceAfterDiscount1 - discountAmount2;
+      
+      // Thành tiền
       const totalPrice = quantity * priceAfterDiscount2;
 
       // Ngày giao dự kiến
       const deliveryDate = detail.deliveryDate ? this.formatTimestamp(Number(detail.deliveryDate)) : '';
+      
+      // Xác định VAT dựa vào giá trị crdfd_ieuchinhgtgt
+      let vatPercentage = "0";
+      const ieuchinhgtgt = detail.ieuchinhgtgt;
+      
+      if (ieuchinhgtgt !== undefined) {
+        switch (ieuchinhgtgt) {
+          case 191920000: // 0%
+            vatPercentage = "0";
+            break;
+          case 191920001: // 5%
+            vatPercentage = "5";
+            break;
+          case 191920002: // 8%
+            vatPercentage = "8";
+            break;
+          case 191920003: // 10%
+            vatPercentage = "10";
+            break;
+          default:
+            vatPercentage = "0";
+        }
+      }
 
+      // Hiển thị chi tiết đơn hàng
       html += `
             <tr>
                 <td style='text-align: center;'>${index + 1}</td>
                 <td style='text-align: left;'>${detail.productName}</td>
-                <td style='text-align: center;'>10%</td>
-                <td style='text-align: center;'>${(discount1 * 100).toFixed(1)}%</td>
-                <td style='text-align: center;'>${(discount2 * 100).toFixed(1)}%</td>
+                <td style='text-align: center;'>${vatPercentage}%</td>`;
+                
+      // Hiển thị chiết khấu 1 (theo % hoặc VND)
+      if (discount1Percentage > 0) {
+        html += `<td style='text-align: center;'>${(discount1Percentage * 100).toFixed(1)}%</td>`;
+      } else if (chieckhauvn > 0) {
+        html += `<td style='text-align: center;'>${this.formatCurrency(chieckhauvn)} đ</td>`;
+      } else {
+        html += `<td style='text-align: center;'>0%</td>`;
+      }
+      
+      // Hiển thị chiết khấu 2
+      html += `<td style='text-align: center;'>${(discount2Percentage * 100).toFixed(1)}%</td>
                 <td style='text-align: center;'>${detail.donvitinh || 'Cái'}</td>
                 <td style='text-align: right; padding-right: 5px !important;'>${this.formatNumber(quantity)}</td>
-                <td style='text-align: right; padding-right: 5px !important;'>${this.formatCurrency(price)} đ</td>
+                <td style='text-align: right; padding-right: 5px !important;'>${this.formatCurrency(originalPrice)} đ</td>
                 <td style='text-align: right; padding-right: 5px !important;'>${this.formatCurrency(priceAfterDiscount2)} đ</td>
                 <td style='text-align: right; padding-right: 5px !important;'>${this.formatCurrency(totalPrice)} đ</td>
                 <td style='text-align: right; padding-right: 5px !important;'>${deliveryDate}</td>
@@ -986,16 +1029,22 @@ addHtml2PdfLib();
 
     details.forEach(detail => {
       const quantity = parseFloat(detail.quantity) || 0;
-      const price = parseFloat(detail.price) || 0;
-      const discount1 = parseFloat(detail.discount) || 0;
-      const discount2 = parseFloat(detail.discount2 || '0') || 0;
-
-      // Tính giá sau chiết khấu 1
-      const priceAfterDiscount1 = price * (1 - discount1);
-
-      // Tính giá sau chiết khấu 2
-      const priceAfterDiscount2 = priceAfterDiscount1 * (1 - discount2);
-
+      const originalPrice = parseFloat(detail.price) || 0;
+      const discount1Percentage = parseFloat(detail.discount) || 0;
+      const discount2Percentage = parseFloat(detail.discount2 || '0') || 0;
+      
+      // Tính tiền chiết khấu 1
+      const discountAmount1 = originalPrice * discount1Percentage;
+      
+      // Giá sau chiết khấu 1
+      const priceAfterDiscount1 = originalPrice - discountAmount1;
+      
+      // Tính tiền chiết khấu 2
+      const discountAmount2 = priceAfterDiscount1 * discount2Percentage;
+      
+      // Giá sau chiết khấu 2
+      const priceAfterDiscount2 = priceAfterDiscount1 - discountAmount2;
+      
       // Cộng vào tổng tiền
       tongTienDonHang += quantity * priceAfterDiscount2;
     });
@@ -1010,17 +1059,51 @@ addHtml2PdfLib();
     if (saleOrder.crdfd_vatstatus === 191920000) { // Có VAT
       details.forEach(detail => {
         const quantity = parseFloat(detail.quantity) || 0;
-        const price = parseFloat(detail.price) || 0;
-        const discount1 = parseFloat(detail.discount) || 0;
-        const discount2 = parseFloat(detail.discount2 || '0') || 0;
-
-        // Tính giá sau chiết khấu
-        const priceAfterDiscount1 = price * (1 - discount1);
-        const priceAfterDiscount2 = priceAfterDiscount1 * (1 - discount2);
-
+        const originalPrice = parseFloat(detail.price) || 0;
+        const discount1Percentage = parseFloat(detail.discount) || 0;
+        const discount2Percentage = parseFloat(detail.discount2 || '0') || 0;
+        const ieuchinhgtgt = detail.ieuchinhgtgt;
+        
+        // Tính tiền chiết khấu 1
+        const discountAmount1 = originalPrice * discount1Percentage;
+        
+        // Giá sau chiết khấu 1
+        const priceAfterDiscount1 = originalPrice - discountAmount1;
+        
+        // Tính tiền chiết khấu 2
+        const discountAmount2 = priceAfterDiscount1 * discount2Percentage;
+        
+        // Giá sau chiết khấu 2
+        const priceAfterDiscount2 = priceAfterDiscount1 - discountAmount2;
+        
         // Tính tổng tiền và VAT
         const totalPrice = quantity * priceAfterDiscount2;
-        sumGTGT += totalPrice * 0.1; // Giả sử VAT 10%
+        
+        // Tính VAT dựa trên crdfd_ieuchinhgtgt
+        let vatRate = 0;
+        if (ieuchinhgtgt !== undefined) {
+          switch (ieuchinhgtgt) {
+            case 191920000: // 0%
+              vatRate = 0;
+              break;
+            case 191920001: // 5%
+              vatRate = 0.05;
+              break;
+            case 191920002: // 8%
+              vatRate = 0.08;
+              break;
+            case 191920003: // 10%
+              vatRate = 0.1;
+              break;
+            default:
+              vatRate = 0;
+          }
+        } else {
+          // Mặc định là 10% nếu không có thông tin
+          vatRate = 0.1;
+        }
+        
+        sumGTGT += totalPrice * vatRate;
       });
     }
 
@@ -1032,24 +1115,59 @@ addHtml2PdfLib();
     let tongTienDonHang = 0;
     let sumGTGT = 0;
     const tienChietKhauSO = 0; // Tiền chiết khấu của đơn hàng
+    
+    // TODO: Trong tương lai, cần lấy tiền chiết khấu đơn hàng từ API nếu có
 
     details.forEach(detail => {
       const quantity = parseFloat(detail.quantity) || 0;
-      const price = parseFloat(detail.price) || 0;
-      const discount1 = parseFloat(detail.discount) || 0;
-      const discount2 = parseFloat(detail.discount2 || '0') || 0;
-
-      // Tính giá sau chiết khấu
-      const priceAfterDiscount1 = price * (1 - discount1);
-      const priceAfterDiscount2 = priceAfterDiscount1 * (1 - discount2);
-
+      const originalPrice = parseFloat(detail.price) || 0;
+      const discount1Percentage = parseFloat(detail.discount) || 0;
+      const discount2Percentage = parseFloat(detail.discount2 || '0') || 0;
+      const ieuchinhgtgt = detail.ieuchinhgtgt;
+      
+      // Tính tiền chiết khấu 1
+      const discountAmount1 = originalPrice * discount1Percentage;
+      
+      // Giá sau chiết khấu 1
+      const priceAfterDiscount1 = originalPrice - discountAmount1;
+      
+      // Tính tiền chiết khấu 2
+      const discountAmount2 = priceAfterDiscount1 * discount2Percentage;
+      
+      // Giá sau chiết khấu 2
+      const priceAfterDiscount2 = priceAfterDiscount1 - discountAmount2;
+      
       // Tính tổng tiền
       const totalPrice = quantity * priceAfterDiscount2;
       tongTienDonHang += totalPrice;
 
       // Nếu có VAT, tính thêm
       if (saleOrder.crdfd_vatstatus === 191920000) { // Có VAT
-        sumGTGT += totalPrice * 0.1; // Giả sử VAT 10%
+        // Tính VAT dựa trên crdfd_ieuchinhgtgt
+        let vatRate = 0;
+        if (ieuchinhgtgt !== undefined) {
+          switch (ieuchinhgtgt) {
+            case 191920000: // 0%
+              vatRate = 0;
+              break;
+            case 191920001: // 5%
+              vatRate = 0.05;
+              break;
+            case 191920002: // 8%
+              vatRate = 0.08;
+              break;
+            case 191920003: // 10%
+              vatRate = 0.1;
+              break;
+            default:
+              vatRate = 0;
+          }
+        } else {
+          // Mặc định là 10% nếu không có thông tin
+          vatRate = 0.1;
+        }
+        
+        sumGTGT += totalPrice * vatRate;
       }
     });
 
@@ -1449,7 +1567,9 @@ addHtml2PdfLib();
             price: this.getFormattedValue(detail, "crdfd_giagoc"),
             deliveryDate: this.getFormattedValue(detail, "crdfd_ngaygiaodukientonghop"),
             donvitinh: this.getFormattedValue(detail, "crdfd_onvionhang"),
-            discount2: this.getFormattedValue(detail, "crdfd_chieckhau2")
+            discount2: this.getFormattedValue(detail, "crdfd_chieckhau2"),
+            ieuchinhgtgt: this.getNumberValue(detail, "crdfd_ieuchinhgtgt"),
+            chieckhauvn: this.getNumberValue(detail, "crdfd_chieckhauvn")
           });
         }
         console.log("orderDetails", orderDetails);
