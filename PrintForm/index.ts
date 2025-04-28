@@ -95,90 +95,6 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
     mainContainer.appendChild(this._loadingIndicator);
     mainContainer.appendChild(this._printContent);
     this._container.appendChild(mainContainer);
-
-    // Thêm style cho container chính
-    // const containerStyle = document.createElement("style");
-    // containerStyle.innerHTML = `
-    //   .print-form-container {
-    //     width: 100%;
-    //     height: 100vh;
-    //     margin: 0 auto;
-    //     overflow-y: auto;
-    //     padding: 10px;
-    //     padding-bottom: 50px; /* Thêm padding dưới để đảm bảo cuộn xuống hết nội dung */
-    //     display: flex;
-    //     flex-direction: column;
-    //     align-items: center; /* Căn giữa nội dung */
-    //   }
-
-    //   .loading-indicator {
-    //     text-align: center;
-    //     padding: 30px;
-    //     font-size: 16px;
-    //     color: #338da5;
-    //     width: 100%;
-    //   }
-
-    //   .print-content {
-    //     width: 100%; /* Tăng độ rộng hiển thị */
-    //     max-width: 100%; /* Giới hạn độ rộng tối đa */
-    //     margin-bottom: 50px; /* Thêm margin dưới cho nội dung */
-    //   }
-
-    //   /* Đảm bảo container của form không bị cắt */
-    //   .container {
-    //     margin-bottom: 50px !important;
-    //   }
-
-    //   /* Thêm các style mới cho việc in */
-    //   @media print {
-    //     body {
-    //       zoom: 85%;
-    //       margin: 0;
-    //       padding: 0;
-    //       -webkit-print-color-adjust: exact;
-    //       print-color-adjust: exact;
-    //     }
-
-    //     .container {
-    //       width: 100%; /* Giảm độ rộng một chút để tránh đè lề */
-    //       margin: 0 auto !important; /* Căn giữa và đảm bảo không bị ghi đè */
-    //       padding: 8mm !important; /* Tăng padding khi in */
-    //     }
-
-    //     .no-print {
-    //       display: none !important;
-    //     }
-
-    //     /* Bỏ thiết lập @page ở đây để sử dụng cài đặt mặc định của trình duyệt/Windows */
-
-    //     table {
-    //       page-break-inside: auto;
-    //       width: 100% !important;
-    //     }
-
-    //     tr {
-    //       page-break-inside: avoid;
-    //       page-break-after: auto;
-    //     }
-
-    //     thead {
-    //       display: table-header-group;
-    //     }
-
-    //     tfoot {
-    //       display: table-footer-group;
-    //     }
-
-    //     /* Đảm bảo text không bị cắt khi in */
-    //     td, th {
-    //       overflow: visible !important;
-    //       white-space: normal !important;
-    //       word-wrap: break-word !important;
-    //     }
-    //   }
-    // `;
-    // document.head.appendChild(containerStyle);
   }
 
   private renderForm(saleOrder: ISaleOrder, saleOrderDetails: ISaleOrderDetail[]): void {
@@ -203,7 +119,7 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
     const logoContainer = this._printContent.querySelector('#logoContainer');
     if (logoContainer) {
       const logoImg = document.createElement('img');
-      logoImg.src = 'https://wecarei-my.sharepoint.com/personal/diem_pham_wecare-i_com/Documents/Photo/crdfd_logo.png';
+      logoImg.src = 'https://lh3.googleusercontent.com/d/15hXdOqZ37IYoxISplYRK5MfoDsNBN2_l=s220?authuser=0';
       logoImg.title = 'Weshop';
       logoImg.alt = 'Weshop';
       logoImg.className = 'img-responsive';
@@ -218,10 +134,18 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
     const qrContainer = this._printContent.querySelector('#qrContainer');
     if (qrContainer) {
       const qrImg = document.createElement('img');
-      qrImg.src = 'https://wecarei-my.sharepoint.com/personal/diem_pham_wecare-i_com/Documents/Photo/new_qrcodenew.png';
+      qrImg.src = 'https://lh3.googleusercontent.com/d/16x8h7SfAFlj7q73WKH9zsHBjw2YXfqiK=s220?authuser=0';
       qrImg.style.width = '100px';
       qrImg.style.height = '100px';
-      qrContainer.appendChild(qrImg);
+      qrImg.style.display = 'block';
+      qrImg.style.margin = '0 auto 10px auto'; // Căn giữa và thêm khoảng cách dưới
+      
+      // Chèn QR code vào đầu container, trước nội dung văn bản
+      if (qrContainer.firstChild) {
+        qrContainer.insertBefore(qrImg, qrContainer.firstChild);
+      } else {
+        qrContainer.appendChild(qrImg);
+      }
     }
 
     // 5. Thêm script element riêng biệt
@@ -556,8 +480,7 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
                 <tbody>
               <tr>
                 <th class='col-sm-4' style='text-align: center; background-color: transparent !important; color: #333 !important;' id="qrContainer">
-                  <!-- QR code sẽ được thêm bằng TypeScript -->
-                  <p>https://wecare.com.vn</p>
+                    <p>https://wecare.com.vn</p>
                 </th>
                 <th class='col-sm-4' style='text-align: center; background-color: transparent !important; color: #333 !important;'>Bên mua
                 <br>
@@ -721,10 +644,10 @@ function exportToPdf() {
         console.log("Iframe đã load xong");
         updateMessage("Đang xử lý hình ảnh...");
         
-        // Thay đổi URL của hình ảnh trong iframe để sử dụng WebResources
+        // Thay đổi URL của hình ảnh trong iframe để sử dụng Google Drive
         Array.from(frameDoc.querySelectorAll('img')).forEach(img => {
-            // Thay đổi URL nếu là URL SharePoint
-            if (img.src && img.src.includes('wecarei-my.sharepoint.com')) {
+            // Thay đổi URL nếu là URL SharePoint hoặc WebResources
+            if (img.src && (img.src.includes('wecarei-my.sharepoint.com') || img.src.includes('wecare-ii.crm5.dynamics.com'))) {
                 if (img.src.includes('crdfd_logo')) {
                     img.src = 'https://lh3.googleusercontent.com/d/15hXdOqZ37IYoxISplYRK5MfoDsNBN2_l=s220?authuser=0';
                     console.log("Đã thay đổi URL logo:", img.src);
