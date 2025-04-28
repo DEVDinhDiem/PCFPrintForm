@@ -97,55 +97,134 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
     this._container.appendChild(mainContainer);
 
     // Thêm style cho container chính
-    const containerStyle = document.createElement("style");
-    containerStyle.innerHTML = `
-      .print-form-container {
-        width: 90%;
-        height: 100vh;
-        margin: 0 auto;
-        overflow-y: auto;
-        padding: 10px;
-        padding-bottom: 50px; /* Thêm padding dưới để đảm bảo cuộn xuống hết nội dung */
-      }
-      
-      .loading-indicator {
-        text-align: center;
-        padding: 20px;
-        font-size: 16px;
-        color: #338da5;
-      }
-      
-      .print-content {
-        width: 100%;
-        margin-bottom: 50px; /* Thêm margin dưới cho nội dung */
-      }
+    // const containerStyle = document.createElement("style");
+    // containerStyle.innerHTML = `
+    //   .print-form-container {
+    //     width: 100%;
+    //     height: 100vh;
+    //     margin: 0 auto;
+    //     overflow-y: auto;
+    //     padding: 10px;
+    //     padding-bottom: 50px; /* Thêm padding dưới để đảm bảo cuộn xuống hết nội dung */
+    //     display: flex;
+    //     flex-direction: column;
+    //     align-items: center; /* Căn giữa nội dung */
+    //   }
 
-      /* Đảm bảo container của form không bị cắt */
-      .container {
-        margin-bottom: 50px !important;
-      }
-    `;
-    document.head.appendChild(containerStyle);
+    //   .loading-indicator {
+    //     text-align: center;
+    //     padding: 30px;
+    //     font-size: 16px;
+    //     color: #338da5;
+    //     width: 100%;
+    //   }
+
+    //   .print-content {
+    //     width: 100%; /* Tăng độ rộng hiển thị */
+    //     max-width: 100%; /* Giới hạn độ rộng tối đa */
+    //     margin-bottom: 50px; /* Thêm margin dưới cho nội dung */
+    //   }
+
+    //   /* Đảm bảo container của form không bị cắt */
+    //   .container {
+    //     margin-bottom: 50px !important;
+    //   }
+
+    //   /* Thêm các style mới cho việc in */
+    //   @media print {
+    //     body {
+    //       zoom: 85%;
+    //       margin: 0;
+    //       padding: 0;
+    //       -webkit-print-color-adjust: exact;
+    //       print-color-adjust: exact;
+    //     }
+
+    //     .container {
+    //       width: 100%; /* Giảm độ rộng một chút để tránh đè lề */
+    //       margin: 0 auto !important; /* Căn giữa và đảm bảo không bị ghi đè */
+    //       padding: 8mm !important; /* Tăng padding khi in */
+    //     }
+
+    //     .no-print {
+    //       display: none !important;
+    //     }
+
+    //     /* Bỏ thiết lập @page ở đây để sử dụng cài đặt mặc định của trình duyệt/Windows */
+
+    //     table {
+    //       page-break-inside: auto;
+    //       width: 100% !important;
+    //     }
+
+    //     tr {
+    //       page-break-inside: avoid;
+    //       page-break-after: auto;
+    //     }
+
+    //     thead {
+    //       display: table-header-group;
+    //     }
+
+    //     tfoot {
+    //       display: table-footer-group;
+    //     }
+
+    //     /* Đảm bảo text không bị cắt khi in */
+    //     td, th {
+    //       overflow: visible !important;
+    //       white-space: normal !important;
+    //       word-wrap: break-word !important;
+    //     }
+    //   }
+    // `;
+    // document.head.appendChild(containerStyle);
   }
 
   private renderForm(saleOrder: ISaleOrder, saleOrderDetails: ISaleOrderDetail[]): void {
     // Kiểm tra trạng thái VAT
     const vatStatus = saleOrder.crdfd_vatstatus;
     const isVATApplicable = vatStatus === 283640000;
-  
+
     // Lấy điều kiện thanh toán
     const paymentCondition = this.getDieuKhoanThanhToan(saleOrder.dieukhoan);
-  
+
     // 1. Tạo HTML cơ bản
     const htmlContent = this.generateFormHTML(saleOrder, saleOrderDetails);
-  
+
     // 2. Tạo JavaScript riêng biệt
     const scriptContent = this.generateFormScript(saleOrder, saleOrderDetails);
-  
+
     // 3. Kết hợp và cập nhật nội dung
     this._printContent.innerHTML = htmlContent;
-  
-    // 4. Thêm script element riêng biệt
+
+    // 4. Thêm các phần tử hình ảnh bằng TypeScript
+    // Tạo và thêm logo
+    const logoContainer = this._printContent.querySelector('#logoContainer');
+    if (logoContainer) {
+      const logoImg = document.createElement('img');
+      logoImg.src = 'https://wecarei-my.sharepoint.com/personal/diem_pham_wecare-i_com/Documents/Photo/crdfd_logo.png';
+      logoImg.title = 'Weshop';
+      logoImg.alt = 'Weshop';
+      logoImg.className = 'img-responsive';
+      logoImg.style.width = '150px';
+      logoImg.style.height = '140px';
+      logoImg.style.float = 'right';
+      logoImg.style.marginRight = '25px';
+      logoContainer.appendChild(logoImg);
+    }
+
+    // Tạo và thêm mã QR
+    const qrContainer = this._printContent.querySelector('#qrContainer');
+    if (qrContainer) {
+      const qrImg = document.createElement('img');
+      qrImg.src = 'https://wecarei-my.sharepoint.com/personal/diem_pham_wecare-i_com/Documents/Photo/new_qrcodenew.png';
+      qrImg.style.width = '100px';
+      qrImg.style.height = '100px';
+      qrContainer.appendChild(qrImg);
+    }
+
+    // 5. Thêm script element riêng biệt
     const scriptElement = document.createElement("script");
     scriptElement.type = "text/javascript";
     scriptElement.textContent = scriptContent;
@@ -157,9 +236,9 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
     // Lấy ngày hiện tại
     const today = new Date();
     const dd = String(today.getDate()).padStart(2, '0');
-    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const MM = String(today.getMonth() + 1).padStart(2, '0');
     const yyyy = today.getFullYear();
-    const todayString = `ngày ${dd} tháng ${mm} năm ${yyyy}`;
+    const todayString = `ngày ${dd} tháng ${MM} năm ${yyyy}`;
 
     return `
 <html>
@@ -172,49 +251,6 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
       /* Các style hiện tại giữ nguyên */
       
       /* Thêm các style mới cho việc in */
-      @media print {
-        body {
-          zoom: 85%;
-          margin: 0;
-          padding: 0;
-          -webkit-print-color-adjust: exact;
-          print-color-adjust: exact;
-        }
-        
-        .container {
-          width: 100%;
-          margin: 0;
-          padding: 0 1mm !important; /* Giảm padding khi in */
-        }
-        
-        .no-print {
-          display: none !important;
-        }
-        
-        @page {
-          size: A4;
-          margin: 5mm; /* Giảm margin khi in */
-        }
-        
-        table {
-          page-break-inside: auto;
-        }
-        
-        tr {
-          page-break-inside: avoid;
-          page-break-after: auto;
-        }
-        
-        thead {
-          display: table-header-group;
-        }
-        
-        tfoot {
-          display: table-footer-group;
-        }
-      }
-
-      /* Style cho màn hình */
       @media screen {
         body {
           margin: 0;
@@ -224,21 +260,25 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
         }
         
         .print-form-container {
-          width: 90%;
+          width: 100%;
           height: 100vh;
           margin: 0 auto;
           overflow-y: auto; /* Thêm thanh cuộn dọc */
           padding: 10px;
           padding-bottom: 50px;
+          display: flex;
+          flex-direction: column;
+          align-items: center; /* Căn giữa nội dung */
         }
         
         .container {
-          width: 100%; /* Container chiếm toàn bộ độ rộng của parent */
-          max-width: none;
+          width: 100%; /* Tăng độ rộng hiển thị */
+          max-width: 100%; /* Giới hạn độ rộng tối đa */
           margin: 0 auto;
-          padding: 10px;
+          padding: 100px; /* Tăng padding cho container */
           background: white;
           margin-bottom: 50px !important;
+          box-shadow: 0 0 10px rgba(0,0,0,0.1); /* Thêm shadow cho container */
         }
         
         .table-responsive {
@@ -250,11 +290,21 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
           color: #ffffff !important;
         }
         
+        /* Style cho header của bảng */
+        .table thead th, 
+        .table tbody tr.tt th,
+        .table > tbody > tr > th {
+          background-color: #338da5 !important;
+          color: #ffffff !important;
+          text-align: center;
+          vertical-align: middle;
+        }
+        
         /* Style cho nút In và Xuất PDF */
         .action-buttons {
           display: flex;
           justify-content: flex-end;
-          margin-bottom: 10px;
+          margin-bottom: 20px; /* Tăng margin bottom */
         }
         
         .btn-action {
@@ -300,18 +350,35 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
       .table > tfoot > tr > th,
       .table > thead > tr > td,
       .table > thead > tr > th {
-        padding: 2px !important;
+        padding: 6px !important; /* Tăng padding cho cell */
+        vertical-align: middle;
       }
 
       /* Đảm bảo phần cuối cùng hiển thị đầy đủ */
       .row:last-child {
         margin-bottom: 50px;
       }
+      
+      /* Thêm màu cho header của table */
+      .table > tbody > tr.tt > th {
+        background-color: #338da5 !important;
+        color: #ffffff !important;
+      }
+      
+      /* Đảm bảo màu nền được in */
+      #colorTitle, 
+      th[id="colorTitle"],
+      .table tbody tr th#colorTitle {
+        background-color: #338da5 !important;
+        color: #ffffff !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
     </style>
 </head>
 
 <body>
-    <div class='container' style='font-family: undefined; width: 100%; margin: 0 auto; background: white; margin-bottom: 50px;'>
+    <div class='container' style='font-family: Arial, sans-serif; width: 100%; max-width: 100%; margin: 0 auto; background: white; margin-bottom: 50px; padding: 20px;'>
       <div class="action-buttons no-print">
         <button id="btnPrint" class="btn-action btn-print">In</button>
         <button id="btnClick" class="btn-action btn-export-pdf">Xuất PDF</button>
@@ -321,13 +388,8 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
           <table class='table'>
             <tbody>
               <tr class='tt'>
-                <td width='20%' style='vertical-align: middle'>
-                  <img src='https://wecare-ii.crm5.dynamics.com/WebResources/crdfd_logo' title='Weshop' alt='Weshop' class='img-responsive' style='
-                      width: 150px;
-                      height: 140px;
-                      float: right;
-                      margin-right: 25px;
-                    '>
+                <td width='20%' style='vertical-align: middle' id="logoContainer">
+                  <!-- Logo sẽ được thêm bằng TypeScript -->
                 </td>
                 <td id='name_shop' width='20%' style='
                     text-align: left;
@@ -335,7 +397,7 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
                     font-size: 30;
                     font-weight: bold;
                     text-align: left;
-                  '>${saleOrder.crdfd_tenthuongmai_text || 'WECARE'}</td>
+                  '>${saleOrder.crdfd_tenthuongmai_text || 'WECARE'} V1.2</td>
                 <td style='text-align: right; font-size: 20px'>
                   <p id='name_shop_title'>${saleOrder.crdfd_tenthuongmai_text === 'WECARE' ? 'CÔNG TY CỔ PHẦN WECARE GROUP' : 'HỘ KINH DOANH WESHOP'}</p>
                   <p>Địa chỉ: Lô B39 Khu công nghiệp Phú Tài, phường</p>
@@ -404,12 +466,12 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
                 <th style='text-align: center; vertical-align: middle; width: 5% !important;' id='colorTitle'>VAT</th>
                 <th style='text-align: center; vertical-align: middle; width: 7% !important;' id='colorTitle'>CK1</th>
                 <th style='text-align: center; vertical-align: middle; width: 7% !important;' id='colorTitle'>CK2</th>
-                <th style='text-align: center; vertical-align: middle; width: 10% !important;' id='colorTitle'>ĐVT</th>
+                <th style='text-align: center; vertical-align: middle; width: 7% !important;' id='colorTitle'>ĐVT</th>
                 <th style='text-align: center; vertical-align: middle; width: 7% !important;' id='colorTitle'>Số lượng</th>
                 <th style='text-align: center; vertical-align: middle; width: 10% !important;' id='colorTitle'>Đơn giá</th>
-                <th style='text-align: center; vertical-align: middle; width: 15% !important;' id='colorTitle'>Đơn giá sau CK</th>
+                <th style='text-align: center; vertical-align: middle; width: 12% !important;' id='colorTitle'>Đơn giá sau CK</th>
                 <th style='text-align: center; vertical-align: middle; width: 12% !important;' id='colorTitle'>Thành tiền</th>
-                <th style='text-align: center; margin: 0 0 0 0px; width: 11% !important;' id='colorTitle'>Ngày giao dự kiến</th>
+                <th style='text-align: center; vertical-align: middle; width: 15% !important;' id='colorTitle'>Ngày giao dự kiến</th>
               </tr>
             </tbody>
             <tbody id='entityType' style='word-wrap: break-word; font-size: 20px; padding: 1px'>
@@ -457,7 +519,7 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
           <table class='table' style='font-size: 20px; border: none'>
             <tbody>
               <tr>
-                <th class='col-sm-4'>
+                <th class='col-sm-4' style='text-align: left; background-color: transparent !important; color: #333 !important;'>
                   Điều khoản thanh toán
                   <p id='HTTT' style='font-weight: normal !important'>${this.getDieuKhoanThanhToan(saleOrder.dieukhoan)}</p>
                   <p></p>
@@ -465,11 +527,11 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
                   <div id='chuyenkhoan'>${this.getThongTinChuyenKhoan(saleOrder.tinhthanh)}</div>
                 </th>
 
-                <th class='col-sm-4' style='text-align: center'>
+                <th class='col-sm-4' style='text-align: center; background-color: transparent !important; color: #333 !important;'>
                   Ngày đặt hàng
-                  <p id='NDH' style='font-weight: normal !important'>${this.formatTimestamp(new Date(saleOrder.createdon).getTime())}</p>
+                  <p id='NDH' style='font-weight: normal !important'>${this.formatTimestamp(Number(saleOrder.createdon))}</p>
                 </th>
-                <th class='col-sm-4' style='text-align: center'>
+                <th class='col-sm-4' style='text-align: center; background-color: transparent !important; color: #333 !important;'>
                   Thời gian giao hàng dự kiến
                 </th>
                     </tr>
@@ -493,12 +555,17 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
           <table class='table' style='font-size: 20px; border: none'>
                 <tbody>
               <tr>
-                <th class='col-sm-4' style='text-align: center'>
-                  <img src='https://wecare-ii.crm5.dynamics.com/WebResources/new_qrcodenew' style='width: 100px; height: 100px'>
+                <th class='col-sm-4' style='text-align: center; background-color: transparent !important; color: #333 !important;' id="qrContainer">
+                  <!-- QR code sẽ được thêm bằng TypeScript -->
                   <p>https://wecare.com.vn</p>
                 </th>
-                <th class='col-sm-4' style='text-align: center'>Bên mua</th>
-                <th class='col-sm-4' style='text-align: center'>
+                <th class='col-sm-4' style='text-align: center; background-color: transparent !important; color: #333 !important;'>Bên mua
+                <br>
+                  <br>
+                  <br>
+                  <br>
+                  <br></th>
+                <th class='col-sm-4' style='text-align: center; background-color: transparent !important; color: #333 !important;'>
                   Bên bán
                   <br>
                   <br>
@@ -534,7 +601,31 @@ function exportToPdf() {
         return;
     }
 
-    // Tạo một iframe mới
+    // Hiển thị thông báo đang tạo PDF
+    var processingMessage = document.createElement('div');
+    processingMessage.style.position = 'fixed';
+    processingMessage.style.top = '50%';
+    processingMessage.style.left = '50%';
+    processingMessage.style.transform = 'translate(-50%, -50%)';
+    processingMessage.style.padding = '20px';
+    processingMessage.style.background = 'rgba(0,0,0,0.7)';
+    processingMessage.style.color = 'white';
+    processingMessage.style.borderRadius = '5px';
+    processingMessage.style.zIndex = '9999';
+    processingMessage.style.width = '250px';
+    processingMessage.style.textAlign = 'center';
+    processingMessage.innerHTML = '<div>Đang tạo PDF...</div><div style="margin-top:10px;font-size:12px;">Vui lòng đợi trong giây lát</div>';
+    document.body.appendChild(processingMessage);
+    
+    // Hàm cập nhật thông báo
+    function updateMessage(text) {
+        processingMessage.innerHTML = '<div>' + text + '</div><div style="margin-top:10px;font-size:12px;">Vui lòng đợi trong giây lát</div>';
+    }
+
+    // Ghi log để debug
+    console.log("Bắt đầu tạo PDF");
+
+    // Tạo một iframe mới để xử lý nội dung in/xuất PDF riêng biệt
     var printFrame = document.createElement('iframe');
     printFrame.style.visibility = 'hidden';
     printFrame.style.position = 'fixed';
@@ -554,25 +645,66 @@ function exportToPdf() {
         frameDoc.write(styleSheet.outerHTML);
     });
     
-    // Thêm style đặc biệt cho iframe
+    // Thêm style đặc biệt cho iframe, sử dụng các style tương tự như hàm print
     frameDoc.write(\`
         <style>
-            @page {
-                size: A4;
-                margin: 5mm;
-            }
             body {
                 margin: 0;
                 padding: 0;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
             .container {
                 width: 100% !important;
                 max-width: none !important;
                 margin: 0 !important;
-                padding: 0 1mm !important;
+                padding: 50px !important; /* Thêm padding 50px khi in */
             }
             .no-print {
                 display: none !important;
+            }
+            
+            /* Đảm bảo hình ảnh được tải đầy đủ */
+            img {
+                max-width: 100%;
+                height: auto;
+                display: block;
+            }
+            
+            /* Đảm bảo table không bị ngắt trang */
+            table {
+                page-break-inside: auto;
+                width: 100% !important;
+            }
+            
+            tr {
+                page-break-inside: avoid;
+                page-break-after: auto;
+            }
+            
+            thead {
+                display: table-header-group;
+            }
+            
+            tfoot {
+                display: table-footer-group;
+            }
+            
+            /* Đảm bảo text không bị cắt khi in */
+            td, th {
+                overflow: visible !important;
+                white-space: normal !important;
+                word-wrap: break-word !important;
+            }
+            
+            /* Fix màu nền */
+            #colorTitle, 
+            th[id="colorTitle"],
+            .table tbody tr th#colorTitle {
+                background-color: #338da5 !important;
+                color: #ffffff !important;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
             }
         </style>
     \`);
@@ -582,43 +714,165 @@ function exportToPdf() {
     frameDoc.write('</body></html>');
     frameDoc.close();
     
-    // Thêm thư viện html2pdf vào iframe
-    var script = frameDoc.createElement('script');
-    script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
-    script.onload = function() {
-        // Khi thư viện đã tải xong, xuất PDF
-        try {
-            var content = frameDoc.querySelector('.container');
-            var opt = {
-                margin: 1,
-                filename: '${saleOrder.crdfd_name || "DonHang"}.pdf',
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+    console.log("Iframe đã được tạo");
+    
+    // Đợi iframe load xong
+    printFrame.onload = function() {
+        console.log("Iframe đã load xong");
+        updateMessage("Đang xử lý hình ảnh...");
+        
+        // Thay đổi URL của hình ảnh trong iframe để sử dụng WebResources
+        Array.from(frameDoc.querySelectorAll('img')).forEach(img => {
+            // Thay đổi URL nếu là URL SharePoint
+            if (img.src && img.src.includes('wecarei-my.sharepoint.com')) {
+                if (img.src.includes('crdfd_logo')) {
+                    img.src = 'https://lh3.googleusercontent.com/d/15hXdOqZ37IYoxISplYRK5MfoDsNBN2_l=s220?authuser=0';
+                    console.log("Đã thay đổi URL logo:", img.src);
+                } else if (img.src.includes('new_qrcodenew')) {
+                    img.src = 'https://lh3.googleusercontent.com/d/16x8h7SfAFlj7q73WKH9zsHBjw2YXfqiK=s220?authuser=0';
+                    console.log("Đã thay đổi URL QR code:", img.src);
+                }
+            }
+        });
+        
+        // Đảm bảo tất cả hình ảnh đã được tải
+        var images = Array.from(frameDoc.querySelectorAll('img'));
+        console.log("Số lượng hình ảnh cần tải: " + images.length);
+        
+        var imagesLoaded = Promise.all(
+            images.map((img, index) => {
+                if(img.complete) {
+                    console.log("Hình ảnh " + index + " đã tải xong");
+                    return Promise.resolve();
+                } else {
+                    console.log("Đang tải hình ảnh " + index);
+                    return new Promise(resolve => {
+                        img.onload = () => {
+                            console.log("Hình ảnh " + index + " tải thành công");
+                            resolve();
+                        };
+                        img.onerror = () => {
+                            console.log("Lỗi khi tải hình ảnh " + index);
+                            resolve(); // Xử lý cả trường hợp lỗi
+                        };
+                    });
+                }
+            })
+        );
+        
+        // Sau khi tất cả hình ảnh đã tải xong
+        imagesLoaded.then(() => {
+            console.log("Tất cả hình ảnh đã tải xong");
+            updateMessage("Đang tạo file PDF...");
+            
+            // Thêm thư viện html2pdf vào iframe
+            var script = frameDoc.createElement('script');
+            script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
+            
+            script.onload = function() {
+                console.log("Thư viện html2pdf đã tải xong");
+                
+                // Khi thư viện đã tải xong, xuất PDF
+                try {
+                    var content = frameDoc.querySelector('.container');
+                    var opt = {
+                        //margin: [10, 10, 10, 10], // top, right, bottom, left
+                        filename: '${saleOrder.crdfd_name || "DonHang"}.pdf',
+                        image: { type: 'jpeg', quality: 1.0 },
+                        html2canvas: { 
+                            scale: 2, 
+                            useCORS: true,
+                            logging: true,
+                            letterRendering: true,
+                            allowTaint: true
+                        },
+                        jsPDF: { 
+                            unit: 'mm', 
+                            format: 'a4', 
+                            orientation: 'landscape' // Chuyển sang định dạng nằm ngang
+                        }
+                    };
+                    
+                    console.log("Bắt đầu tạo PDF với các tùy chọn:", opt);
+                    updateMessage("Đang xử lý nội dung...");
+                    
+                    // Sử dụng setTimeout để đảm bảo tất cả nội dung đã render
+                    setTimeout(function() {
+                        console.log("Bắt đầu chuyển đổi HTML sang PDF");
+                        updateMessage("Đang chuyển đổi HTML sang PDF...");
+                        
+                        // Tạo PDF và gửi lên API
+                        frameDoc.defaultView.html2pdf().from(content).set(opt).outputPdf('datauristring')
+                        .then(function(pdfBase64) {
+                            console.log("Đã tạo PDF base64 thành công");
+                            updateMessage("Đang gửi PDF lên máy chủ...");
+                            
+                            // Gửi PDF lên API
+                            sendPdfToApi(pdfBase64, '${saleOrder.crdfd_sale_orderid || "ID123"}', '${saleOrder.crdfd_name || "DonHang"}.pdf')
+                            .then((responseText) => {
+                                console.log("Đã gửi PDF lên API thành công, phản hồi:", responseText);
+                                updateMessage("Đang tải xuống PDF...");
+                                
+                                // Sau đó tải xuống PDF
+                                return frameDoc.defaultView.html2pdf().from(content).set(opt).save();
+                            })
+                            .then(function() {
+                                console.log("Đã tải xuống PDF thành công");
+                                updateMessage("Hoàn tất!");
+                                
+                                // Đóng thông báo sau khi hoàn tất
+                                setTimeout(function() {
+                                    document.body.removeChild(processingMessage);
+                                    document.body.removeChild(printFrame);
+                                }, 1500);
+                            })
+                            .catch(function(error) {
+                                console.error("Lỗi khi xử lý PDF:", error);
+                                updateMessage("Có lỗi xảy ra! Vui lòng thử lại.");
+                                setTimeout(function() {
+                                    document.body.removeChild(processingMessage);
+                                    document.body.removeChild(printFrame);
+                                }, 3000);
+                            });
+                        })
+                        .catch(function(error) {
+                            console.error("Lỗi khi tạo PDF:", error);
+                            updateMessage("Có lỗi xảy ra khi tạo PDF!");
+                            setTimeout(function() {
+                                document.body.removeChild(processingMessage);
+                                document.body.removeChild(printFrame);
+                            }, 3000);
+                        });
+                    }, 1000); // Tăng thời gian đợi lên 1000ms để đảm bảo mọi thứ đã render
+                } catch (e) {
+                    console.error('Lỗi khi xuất PDF:', e);
+                    updateMessage("Có lỗi xảy ra! Vui lòng thử lại.");
+                    setTimeout(function() {
+                        document.body.removeChild(processingMessage);
+                        document.body.removeChild(printFrame);
+                    }, 3000);
+                }
             };
             
-            // Sử dụng setTimeout để đảm bảo tất cả nội dung đã render
+            script.onerror = function() {
+                console.error("Lỗi khi tải thư viện html2pdf");
+                updateMessage("Lỗi khi tải thư viện! Vui lòng thử lại.");
+                setTimeout(function() {
+                    document.body.removeChild(processingMessage);
+                    document.body.removeChild(printFrame);
+                }, 3000);
+            };
+            
+            frameDoc.body.appendChild(script);
+        }).catch(error => {
+            console.error('Lỗi khi tải hình ảnh:', error);
+            updateMessage("Lỗi khi tải hình ảnh! Vui lòng thử lại.");
             setTimeout(function() {
-                // Tạo PDF và gửi lên API
-                frameDoc.defaultView.html2pdf().from(content).set(opt).outputPdf('datauristring').then(function(pdfBase64) {
-                    // Gửi PDF lên API
-                    sendPdfToApi(pdfBase64, '${saleOrder.crdfd_sale_orderid|| "ID123"}', '${saleOrder.crdfd_name|| "DonHang"}.pdf');
-                    
-                    // Sau đó tải xuống PDF
-                    frameDoc.defaultView.html2pdf().from(content).set(opt).save().then(function() {
-                        // Xóa iframe sau khi xuất PDF xong
-                        setTimeout(function() {
-                            document.body.removeChild(printFrame);
-                        }, 1000);
-                    });
-                });
-            }, 500);
-        } catch (e) {
-            console.error('Lỗi khi xuất PDF:', e);
-            document.body.removeChild(printFrame);
-        }
+                document.body.removeChild(processingMessage);
+                document.body.removeChild(printFrame);
+            }, 3000);
+        });
     };
-    frameDoc.body.appendChild(script);
 }
 
 function sendPdfToApi(pdfDataUri, saleOrderId, SOName) {
@@ -635,8 +889,8 @@ function sendPdfToApi(pdfDataUri, saleOrderId, SOName) {
     // URL API
     var apiUrl = "https://prod-62.southeastasia.logic.azure.com:443/workflows/b0681ade249043eeb8f69b786b78cd64/triggers/manual/paths/invoke?api-version=2016-06-01&sp=%2Ftriggers%2Fmanual%2Frun&sv=1.0&sig=t6bBO3XN_UKAKWmRjt-A9GjYoU-U_pyfDxcSTVXFhw0";
     
-    // Gửi request bằng fetch API
-    fetch(apiUrl, {
+    // Gửi request bằng fetch API và trả về promise để xử lý chuỗi
+    return fetch(apiUrl, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json'
@@ -646,15 +900,17 @@ function sendPdfToApi(pdfDataUri, saleOrderId, SOName) {
     .then(response => {
         if (response.ok) {
             console.log('PDF đã được gửi thành công đến API');
-            return response.json();
+            return response.text(); // Đọc response dưới dạng text thay vì JSON
         }
         throw new Error('Gửi PDF thất bại');
     })
     .then(data => {
         console.log('Kết quả từ API:', data);
+        return data;
     })
     .catch(error => {
         console.error('Lỗi khi gửi API:', error);
+        throw error;
     });
 }
 
@@ -689,10 +945,6 @@ function handlePrint() {
     // Thêm style đặc biệt cho iframe
     frameDoc.write(\`
         <style>
-            @page {
-                size: A4;
-                margin: 5mm;
-            }
             body {
                 margin: 0;
                 padding: 0;
@@ -701,7 +953,7 @@ function handlePrint() {
                 width: 100% !important;
                 max-width: none !important;
                 margin: 0 !important;
-                padding: 0 1mm !important;
+                padding: 50px !important; /* Thêm padding 50px khi in */
             }
             .no-print {
                 display: none !important;
@@ -783,7 +1035,7 @@ addHtml2PdfLib();
       const totalPrice = quantity * priceAfterDiscount2;
 
       // Ngày giao dự kiến
-      const deliveryDate = detail.deliveryDate ? this.formatTimestamp(new Date(detail.deliveryDate).getTime()) : '';
+      const deliveryDate = detail.deliveryDate ? this.formatTimestamp(Number(detail.deliveryDate)) : '';
 
       html += `
             <tr>
@@ -884,18 +1136,24 @@ addHtml2PdfLib();
     return `${this.formatCurrency(tongTienCuoi)} đ`;
   }
 
-  // Phương thức định dạng timestamp thành dd/mm/yyyy
+  // Phương thức định dạng timestamp thành dd/MM/yyyy
   private formatTimestamp(timestamp: number): string {
+    // Chuyển timestamp sang date
+    console.log("timestamp", timestamp);
     const date = new Date(timestamp);
+    console.log("date", date);
     return this.formatDate(date);
   }
 
   // Phương thức định dạng ngày
   private formatDate(date: Date): string {
     const dd = String(date.getDate()).padStart(2, '0');
-    const mm = String(date.getMonth() + 1).padStart(2, '0');
+    const MM = String(date.getMonth() + 1).padStart(2, '0');
     const yyyy = date.getFullYear();
-    return `${dd}/${mm}/${yyyy}`;
+    console.log("dd", dd);
+    console.log("MM", MM);
+    console.log("yyyy", yyyy);
+    return `${dd}/${MM}/${yyyy}`;
   }
 
   // Phương thức định dạng số
@@ -941,23 +1199,18 @@ addHtml2PdfLib();
     return "";
   }
 
-  private handlePrint(): void {
-    // Chức năng in sẽ được xử lý trong generateFormHTML và generateFormScript
-    console.log("Nút in đã được nhấn");
-  }
-
   /**
    * Called when any value in the property bag has changed. This includes field values, data-sets, global values such as container height and width, offline status, control metadata values such as label, visible, etc.
-   * @param context The entire property bag available to control via Context Object; It contains values as set up by the customizer mapped to names defined in the manifest, as well as utility functions
+   * @param context The entire property bag available to control via Context Object; It contains values as set up by the customizer mapped to property names defined in the manifest, as well as utility functions
    */
   public updateView(context: ComponentFramework.Context<IInputs>): void {
     try {
       // Mỗi lần gọi updateView, tăng sessionId để huỷ các phiên cũ
       this._currentSessionId++;
       const currentSessionId = this._currentSessionId;
-      
+
       console.log(`===== BẮT ĐẦU UPDATE VIEW [Phiên ${currentSessionId}] =====`);
-      
+
       // Hiển thị loading indicator
       if (this._loadingIndicator) {
         this._loadingIndicator.style.display = "block";
@@ -972,9 +1225,11 @@ addHtml2PdfLib();
       const saleOrdersDataset = context.parameters.saleOrders;
       const saleOrderDetailsDataset = context.parameters.saleOrderDetails;
 
+      console.log("saleOrdersDataset", saleOrdersDataset);
+
       console.log("saleOrdersDataset records:", saleOrdersDataset.sortedRecordIds.length);
       console.log("saleOrderDetailsDataset records:", saleOrderDetailsDataset.sortedRecordIds.length);
-      
+
       // Reset flag loaded nếu MaxRecord thay đổi
       if (previousMaxRecords !== this._maxRecords) {
         this._isDataLoaded = false;
@@ -994,17 +1249,17 @@ addHtml2PdfLib();
       // Kiểm tra số lượng bản ghi hiện tại với số lượng tối đa
       const currentRecordCount = saleOrderDetailsDataset.sortedRecordIds.length;
       const targetRecordCount = this._maxRecords > 0 ? this._maxRecords : 1000;
-      
+
       console.log(`Kiểm tra số lượng bản ghi hiện tại: ${currentRecordCount}/${targetRecordCount}`);
-      
+
       // Nếu đã đủ số lượng bản ghi hoặc không có trang tiếp theo, xử lý và hiển thị ngay
       // Thêm kiểm tra đã tải đủ dữ liệu chưa
       if (currentRecordCount >= targetRecordCount || !saleOrderDetailsDataset.paging.hasNextPage || this._isDataLoaded) {
         console.log(`[Phiên ${currentSessionId}] Đã có đủ số lượng bản ghi (${currentRecordCount}/${targetRecordCount}) hoặc không còn trang tiếp theo, xử lý dữ liệu luôn.`);
-        
+
         // Đánh dấu đã tải đủ dữ liệu
         this._isDataLoaded = true;
-        
+
         this.processAndRenderData(saleOrdersDataset, saleOrderDetailsDataset);
         return;
       }
@@ -1017,7 +1272,7 @@ addHtml2PdfLib();
             console.log(`[Phiên ${currentSessionId}] Đã bị huỷ bởi phiên mới hơn ${this._currentSessionId}, dừng tải dữ liệu.`);
             return;
           }
-          
+
           // Ẩn loading indicator tạm thời
           if (this._loadingIndicator) {
             this._loadingIndicator.style.display = "none";
@@ -1028,7 +1283,7 @@ addHtml2PdfLib();
           let loadingAttempts = 0;
           const maxAttempts = 5; // Giới hạn số lần tải để tránh vòng lặp vô hạn
           const totalRecordsToLoad = this._maxRecords > 0 ? this._maxRecords : 1000; // Mặc định 1000 nếu không có giá trị
-          
+
           // Log chi tiết các điều kiện để debug
           console.log(`[Phiên ${currentSessionId}] ==== ĐIỀU KIỆN TRƯỚC VÒNG LẶP ====`);
           console.log(`[Phiên ${currentSessionId}] hasMoreRecords:`, hasMoreRecords);
@@ -1036,7 +1291,7 @@ addHtml2PdfLib();
           console.log(`[Phiên ${currentSessionId}] targetRecordCount:`, totalRecordsToLoad);
           console.log(`[Phiên ${currentSessionId}] Đã đủ số lượng bản ghi:`, saleOrderDetailsDataset.sortedRecordIds.length >= totalRecordsToLoad);
           console.log(`[Phiên ${currentSessionId}] ===============================`);
-          
+
           // Kiểm tra lại điều kiện trước khi bắt đầu tải
           if (saleOrderDetailsDataset.sortedRecordIds.length >= totalRecordsToLoad) {
             console.log(`[Phiên ${currentSessionId}] Đã đủ số lượng bản ghi trước khi bắt đầu tải, xử lý dữ liệu luôn.`);
@@ -1044,11 +1299,11 @@ addHtml2PdfLib();
             this.processAndRenderData(saleOrdersDataset, saleOrderDetailsDataset);
             return;
           }
-          
+
           // Hiển thị thông báo đang tải thêm
           if (hasMoreRecords && saleOrderDetailsDataset.sortedRecordIds.length < totalRecordsToLoad) {
             console.log(`[Phiên ${currentSessionId}] ĐIỀU KIỆN ĐÃ THỎA MÃN: Cần tải thêm dữ liệu`);
-            
+
             this._printContent.innerHTML = `
               <div class="info-message" style="padding: 20px; text-align: center; background-color: #f8f9fa; border-radius: 5px; margin: 20px 0;">
                   <h3 style="color: #338da5; margin-bottom: 10px;">Đang tải dữ liệu chi tiết đơn hàng [Phiên ${currentSessionId}]</h3>
@@ -1073,65 +1328,65 @@ addHtml2PdfLib();
             this.processAndRenderData(saleOrdersDataset, saleOrderDetailsDataset);
             return;
           }
-          
+
           // Tiếp tục tải cho đến khi đạt đủ số lượng bản ghi hoặc không còn trang tiếp theo
           while (
-            hasMoreRecords && 
-            loadingAttempts < maxAttempts && 
+            hasMoreRecords &&
+            loadingAttempts < maxAttempts &&
             saleOrderDetailsDataset.sortedRecordIds.length < totalRecordsToLoad &&
             currentSessionId === this._currentSessionId // Kiểm tra phiên còn hiện hành không
           ) {
             console.log(`[Phiên ${currentSessionId}] ==== ĐIỀU KIỆN TRONG VÒNG LẶP - LẦN ${loadingAttempts + 1} ====`);
             console.log(`[Phiên ${currentSessionId}] hasMoreRecords:`, hasMoreRecords);
             console.log(`[Phiên ${currentSessionId}] loadingAttempts < maxAttempts:`, loadingAttempts < maxAttempts, `(${loadingAttempts}/${maxAttempts})`);
-            console.log(`[Phiên ${currentSessionId}] currentRecords < targetRecords:`, saleOrderDetailsDataset.sortedRecordIds.length < totalRecordsToLoad, 
+            console.log(`[Phiên ${currentSessionId}] currentRecords < targetRecords:`, saleOrderDetailsDataset.sortedRecordIds.length < totalRecordsToLoad,
               `(${saleOrderDetailsDataset.sortedRecordIds.length}/${totalRecordsToLoad})`);
             console.log(`[Phiên ${currentSessionId}] Phiên hiện hành:`, currentSessionId === this._currentSessionId);
             console.log(`[Phiên ${currentSessionId}] ===============================`);
-            
+
             console.log(`[Phiên ${currentSessionId}] Đang tải trang tiếp theo. Lần thử: ${loadingAttempts + 1}/${maxAttempts}`);
             console.log(`[Phiên ${currentSessionId}] Số bản ghi hiện tại: ${saleOrderDetailsDataset.sortedRecordIds.length}/${totalRecordsToLoad}`);
             loadingAttempts++;
-            
+
             try {
               // Kiểm tra lại phiên hiện hành trước khi tải
               if (currentSessionId !== this._currentSessionId) {
                 console.log(`[Phiên ${currentSessionId}] Đã bị huỷ trong quá trình tải, dừng ngay.`);
                 return;
               }
-              
+
               // Thêm đợi 500ms giữa mỗi lần tải để tránh quá tải
               await new Promise(resolve => setTimeout(resolve, 500));
-              
+
               // Kiểm tra lại phiên hiện hành sau khi đợi
               if (currentSessionId !== this._currentSessionId) {
                 console.log(`[Phiên ${currentSessionId}] Đã bị huỷ sau khi đợi, dừng ngay.`);
                 return;
               }
-              
+
               console.log(`[Phiên ${currentSessionId}] Bắt đầu gọi loadNextPage()...`);
               await saleOrderDetailsDataset.paging.loadNextPage();
-              
+
               // Kiểm tra phiên hiện hành sau khi tải dữ liệu
               if (currentSessionId !== this._currentSessionId) {
                 console.log(`[Phiên ${currentSessionId}] Đã bị huỷ sau khi tải dữ liệu, dừng ngay.`);
                 return;
               }
-              
+
               console.log(`[Phiên ${currentSessionId}] Đã tải thêm dữ liệu. Tổng số sau khi tải: ${saleOrderDetailsDataset.sortedRecordIds.length}`);
-              
+
               // Tính phần trăm hoàn thành
               const percentComplete = Math.min(
-                100, 
+                100,
                 Math.round((saleOrderDetailsDataset.sortedRecordIds.length / totalRecordsToLoad) * 100)
               );
-              
+
               // Kiểm tra số lượng bản ghi sau khi tải - nếu bị reset về số nhỏ, có thể đã có phiên mới
               if (saleOrderDetailsDataset.sortedRecordIds.length < 25) {
                 console.log(`[Phiên ${currentSessionId}] Phát hiện dữ liệu bị reset (${saleOrderDetailsDataset.sortedRecordIds.length} bản ghi), có thể đã có phiên mới.`);
                 return;
               }
-              
+
               // Cập nhật thông báo
               this._printContent.innerHTML = `
                 <div class="info-message" style="padding: 20px; text-align: center; background-color: #f8f9fa; border-radius: 5px; margin: 20px 0;">
@@ -1143,12 +1398,12 @@ addHtml2PdfLib();
                     </div>
                 </div>
               `;
-              
+
               // Kiểm tra xem còn trang tiếp theo không
               const previousHasMoreRecords = hasMoreRecords;
               hasMoreRecords = saleOrderDetailsDataset.paging.hasNextPage;
               console.log(`[Phiên ${currentSessionId}] hasMoreRecords trước/sau: ${previousHasMoreRecords}/${hasMoreRecords}`);
-              
+
               // Nếu đã đủ số lượng bản ghi, dừng việc tải
               if (saleOrderDetailsDataset.sortedRecordIds.length >= totalRecordsToLoad) {
                 console.log(`[Phiên ${currentSessionId}] Đã tải đủ ${totalRecordsToLoad} bản ghi, dừng tải.`);
@@ -1169,24 +1424,24 @@ addHtml2PdfLib();
               break;
             }
           }
-          
+
           // Kiểm tra phiên hiện hành trước khi xử lý dữ liệu
           if (currentSessionId !== this._currentSessionId) {
             console.log(`[Phiên ${currentSessionId}] Đã bị huỷ sau khi tải xong dữ liệu, không xử lý dữ liệu.`);
             return;
           }
-          
+
           // Không cần hiển thị thông báo hoàn tất, chuyển trực tiếp sang xử lý dữ liệu
           console.log(`[Phiên ${currentSessionId}] Đã tải xong dữ liệu, chuyển sang xử lý.`);
-          
+
           // Đánh dấu đã tải đủ dữ liệu
           this._isDataLoaded = true;
-          
+
           // Hiển thị loading indicator lại
           if (this._loadingIndicator) {
             this._loadingIndicator.style.display = "block";
           }
-          
+
           // Tiếp tục xử lý dữ liệu sau khi tải xong
           this.processAndRenderData(saleOrdersDataset, saleOrderDetailsDataset);
         } catch (error) {
@@ -1199,7 +1454,7 @@ addHtml2PdfLib();
           `;
         }
       };
-      
+
       // Gọi hàm tải dữ liệu
       loadAllData();
       console.log(`===== KẾT THÚC UPDATE VIEW [Phiên ${currentSessionId}] =====`);
@@ -1236,7 +1491,7 @@ addHtml2PdfLib();
         console.log("===== DATASET INFO =====");
         console.log("Sale Orders Dataset Total Records:", saleOrdersDataset.sortedRecordIds.length);
         console.log("Sale Order Details Dataset Total Records:", saleOrderDetailsDataset.sortedRecordIds.length);
-        
+
         // Đọc giá trị từ bản ghi
         const orderData: ISaleOrder = {
           crdfd_sale_orderid: this.getFormattedValue(saleOrder, "crdfd_sale_orderid"),
@@ -1251,19 +1506,19 @@ addHtml2PdfLib();
           dieukhoan: this.getNumberValue(saleOrder, "crdfd_dieu_khoan_thanh_toan"),
           tinhthanh: this.getFormattedValue(saleOrder, "crdfd_localtext") || ""
         };
-
+        console.log("orderData", orderData);
         // Lấy tất cả các chi tiết đơn hàng
         // Kiểm tra số lượng bản ghi nhận được
         const orderDetails: ISaleOrderDetail[] = [];
         const totalDetails = saleOrderDetailsDataset.sortedRecordIds.length;
-        
+
         console.log(`Đang xử lý ${totalDetails} chi tiết đơn hàng`);
-        
+
         // Lấy toàn bộ records từ dataset
         for (let i = 0; i < totalDetails; i++) {
           const id = saleOrderDetailsDataset.sortedRecordIds[i];
           const detail = saleOrderDetailsDataset.records[id];
-          
+
           orderDetails.push({
             productName: this.getFormattedValue(detail, "crdfd_tensanphamtext"),
             discount: this.getFormattedValue(detail, "crdfd_chieckhau"),
@@ -1274,12 +1529,12 @@ addHtml2PdfLib();
             discount2: this.getFormattedValue(detail, "crdfd_chieckhau2")
           });
         }
-
+        console.log("orderDetails", orderDetails);
         console.log(`Đã xử lý ${orderDetails.length}/${totalDetails} chi tiết đơn hàng`);
 
         // Render form với dữ liệu lấy được
         this.renderForm(orderData, orderDetails);
-        
+
         // Đảm bảo cuộn xuống cuối để hiển thị hết nội dung
         setTimeout(() => {
           const container = document.querySelector('.print-form-container') as HTMLElement;
