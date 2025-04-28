@@ -183,6 +183,9 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
           padding: 0;
           height: 100vh;
           overflow: hidden;
+          font-family: Arial, sans-serif !important;
+          -webkit-font-smoothing: antialiased;
+          -moz-osx-font-smoothing: grayscale;
         }
         
         .print-form-container {
@@ -205,6 +208,7 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
           background: white;
           margin-bottom: 50px !important;
           box-shadow: 0 0 10px rgba(0,0,0,0.1); /* Thêm shadow cho container */
+          font-family: Arial, sans-serif !important;
         }
         
         .table-responsive {
@@ -300,14 +304,67 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
       }
+      
+      /* Fix cho font-size */
+      #name_shop {
+        font-size: 30px !important;
+      }
+      
+      /* Đảm bảo tất cả kích thước font được render đúng */
+      body, table, td, th, p, span, div {
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+      }
+      
+      /* Ghi đè Bootstrap CSS */
+      .table:not(.table-product-details) {
+        border: none !important;
+      }
+      .table:not(.table-product-details) > thead > tr > th,
+      .table:not(.table-product-details) > tbody > tr > th,
+      .table:not(.table-product-details) > tfoot > tr > th,
+      .table:not(.table-product-details) > thead > tr > td,
+      .table:not(.table-product-details) > tbody > tr > td,
+      .table:not(.table-product-details) > tfoot > tr > td {
+        border: none !important;
+      }
+      .table-bordered:not(.table-product-details) {
+        border: none !important;
+      }
+      .table-bordered:not(.table-product-details) > thead > tr > th,
+      .table-bordered:not(.table-product-details) > tbody > tr > th,
+      .table-bordered:not(.table-product-details) > tfoot > tr > th,
+      .table-bordered:not(.table-product-details) > thead > tr > td,
+      .table-bordered:not(.table-product-details) > tbody > tr > td,
+      .table-bordered:not(.table-product-details) > tfoot > tr > td {
+        border: none !important;
+      }
+      
+      /* CSS cho bảng thông tin thanh toán */
+      .table[style*="table-layout: fixed"] {
+        table-layout: fixed !important;
+        width: 100% !important;
+      }
+      
+      .table[style*="table-layout: fixed"] tr[style*="display: flex"] {
+        display: flex !important;
+        width: 100% !important;
+      }
+      
+      .table[style*="table-layout: fixed"] td[style*="flex: 1"] {
+        flex: 1 !important;
+        width: 33.33% !important;
+        display: inline-block !important;
+        vertical-align: top !important;
+      }
     </style>
 </head>
 
 <body>
-    <div class='container' style='font-family: Arial, sans-serif; width: 100%; max-width: 100%; margin: 0 auto; background: white; margin-bottom: 50px; padding: 20px;'>
+    <div class='container' style='font-family: Arial, sans-serif !important; width: 100%; max-width: 100%; margin: 0 auto; background: white; margin-bottom: 50px; padding: 20px;'>
       <div class="action-buttons no-print">
         <button id="btnPrint" class="btn-action btn-print">In</button>
-        <button id="btnClick" class="btn-action btn-export-pdf">Xuất PDF</button>
+        <button id="btnClick" class="btn-action btn-export-pdf">Lưu</button>
       </div>
       <div class='row'>
         <div class='table-responsive'>
@@ -320,10 +377,10 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
                 <td id='name_shop' width='20%' style='
                     text-align: left;
                     vertical-align: middle;
-                    font-size: 30;
+                    font-size: 30px;
                     font-weight: bold;
                     text-align: left;
-                  '>${saleOrder.crdfd_tenthuongmai_text || 'WECARE'} V1.2</td>
+                  '>${saleOrder.crdfd_tenthuongmai_text || 'WECARE'}</td>
                 <td style='text-align: right; font-size: 20px'>
                   <p id='name_shop_title'>${saleOrder.crdfd_tenthuongmai_text === 'WECARE' ? 'CÔNG TY CỔ PHẦN WECARE GROUP' : 'HỘ KINH DOANH WESHOP'}</p>
                   <p>Địa chỉ: Lô B39 Khu công nghiệp Phú Tài, phường</p>
@@ -384,7 +441,7 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
 
       <div class='row'>
         <div class='table-responsive'>
-          <table class='table table-bordered'>
+          <table class='table table-bordered table-product-details'>
             <tbody style='font-size: 20px; padding: 1px; text-align: center'>
               <tr class='tt'>
                 <th style='text-align: center; vertical-align: middle; width: 3% !important;' id='colorTitle'>STT</th>
@@ -442,25 +499,23 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
       <br>
       <div class='row'>
         <div class='table-responsive'>
-          <table class='table' style='font-size: 20px; border: none'>
+          <table class='table' style='font-size: 20px; border: none; table-layout: fixed;'>
             <tbody>
-              <tr>
-                <th class='col-sm-4' style='text-align: left; background-color: transparent !important; color: #333 !important;'>
-                  Điều khoản thanh toán
-                  <p id='HTTT' style='font-weight: normal !important'>${this.getDieuKhoanThanhToan(saleOrder.dieukhoan)}</p>
-                  <p></p>
-                  <br>
-                  <div id='chuyenkhoan'>${this.getThongTinChuyenKhoan(saleOrder.tinhthanh)}</div>
-                </th>
+              <tr style="display: flex; width: 100%;">
+                <td style='flex: 1; text-align: left; background-color: transparent !important; color: #333 !important; vertical-align: top; border: none !important;'>
+                  <h4 style="font-size: 20px; margin-bottom: 10px;">Điều khoản thanh toán</h4>
+                  <p id='HTTT' style='font-weight: normal !important; margin-bottom: 10px;'>${this.getDieuKhoanThanhToan(saleOrder.dieukhoan)}</p>
+                  <div id='chuyenkhoan' style="margin-top: 10px;">${this.getThongTinChuyenKhoan(saleOrder.tinhthanh)}</div>
+                </td>
 
-                <th class='col-sm-4' style='text-align: center; background-color: transparent !important; color: #333 !important;'>
-                  Ngày đặt hàng
+                <td style='flex: 1; text-align: center; background-color: transparent !important; color: #333 !important; vertical-align: top; border: none !important;'>
+                  <h4 style="font-size: 20px; margin-bottom: 10px;">Ngày đặt hàng</h4>
                   <p id='NDH' style='font-weight: normal !important'>${this.formatTimestamp(Number(saleOrder.createdon))}</p>
-                </th>
-                <th class='col-sm-4' style='text-align: center; background-color: transparent !important; color: #333 !important;'>
-                  Thời gian giao hàng dự kiến
-                </th>
-                    </tr>
+                </td>
+                <td style='flex: 1; text-align: center; background-color: transparent !important; color: #333 !important; vertical-align: top; border: none !important;'>
+                  <h4 style="font-size: 20px; margin-bottom: 10px;">Thời gian giao hàng dự kiến</h4>
+                </td>
+              </tr>
             </tbody>
           </table>
         </div>
@@ -468,39 +523,33 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
       <br>
       <div class='row' id='title_wc'>
       ${saleOrder.crdfd_tenthuongmai_text === 'WECARE' ?
-        `<p style='font-size: 20px;'>
+        `<p style='font-size: 20px; padding:10px'>
           <b class='tt-ft'>Về Wecare:</b><br>
           Chúng tôi mong muốn hỗ trợ các công ty, nhà máy, đơn vị xây dựng,
           thiết kế có được những sự lựa chọn đáng tin cậy cho các giải pháp về phụ kiện phụ trợ,
           để các doanh nghiệp có thể yên tâm &amp; toàn tâm trong sản phẩm chính của mình.
       </p>` : ''}
       </div>
-      <br>
+        <br>
       <div class='row'>
         <div class='table-responsive'>
-          <table class='table' style='font-size: 20px; border: none'>
-                <tbody>
-              <tr>
-                <th class='col-sm-4' style='text-align: center; background-color: transparent !important; color: #333 !important;' id="qrContainer">
-                    <p>https://wecare.com.vn</p>
-                </th>
-                <th class='col-sm-4' style='text-align: center; background-color: transparent !important; color: #333 !important;'>Bên mua
-                <br>
-                  <br>
-                  <br>
-                  <br>
-                  <br></th>
-                <th class='col-sm-4' style='text-align: center; background-color: transparent !important; color: #333 !important;'>
-                  Bên bán
-                  <br>
-                  <br>
-                  <br>
-                  <br>
-                  <br>
-                </th>
+          <table class='table' style='font-size: 20px; border: none; table-layout: fixed;'>
+            <tbody>
+              <tr style="display: flex; width: 100%;">
+                <td style='flex: 1; text-align: center; background-color: transparent !important; color: #333 !important; vertical-align: top; border: none !important;' id="qrContainer">
+                    <p style="margin-top: 10px;">https://wecare.com.vn</p>
+                </td>
+                <td style='flex: 1; text-align: center; background-color: transparent !important; color: #333 !important; vertical-align: top; border: none !important;'>
+                  <h4 style="font-size: 20px; margin-bottom: 10px;">Bên mua</h4>
+                  <p style="height: 80px;"></p>
+                </td>
+                <td style='flex: 1; text-align: center; background-color: transparent !important; color: #333 !important; vertical-align: top; border: none !important;'>
+                  <h4 style="font-size: 20px; margin-bottom: 10px;">Bên bán</h4>
+                  <p style="height: 80px;"></p>
+                </td>
               </tr>
-                </tbody>
-            </table>
+            </tbody>
+          </table>
         </div>
       </div>
       <br>
@@ -510,15 +559,94 @@ export class PrintForm implements ComponentFramework.StandardControl<IInputs, IO
     `;
   }
 
+  // Phương thức định dạng thời gian để sử dụng cho tên file
+  private formatDateTime(date: Date = new Date(), removeSlash = false): string {
+    // Lấy giờ và phút
+    const time = date.toLocaleTimeString('vi-VN', {hour: '2-digit', minute: '2-digit'});
+    
+    // Lấy ngày, tháng, năm
+    const dateStr = date.toLocaleDateString('vi-VN', {day: '2-digit', month: '2-digit', year: 'numeric'});
+    
+    // Nếu cần loại bỏ dấu gạch chéo
+    const formattedDate = removeSlash ? dateStr.replace(/\//g, '') : dateStr;
+    
+    // Trả về định dạng hh:mm dd/MM/yyyy hoặc hh:mm ddMMyyyy
+    return `${time}_${formattedDate}`;
+  }
+
   // Phương thức tạo JavaScript
   private generateFormScript(saleOrder: ISaleOrder, saleOrderDetails: ISaleOrderDetail[]): string {
+    // Lấy định dạng thời gian hiện tại cho tên file
+    const formattedDateTime = this.formatDateTime(new Date(), true);
+    
     return `
 function myFunction() {
-    // Gọi hàm xuất PDF sử dụng phương pháp giống hàm in
-    exportToPdf();
+    // Hiển thị popup xác nhận trước khi xuất PDF
+    showConfirmDialog();
 }
 
-function exportToPdf() {
+// Hàm hiển thị popup xác nhận
+function showConfirmDialog() {
+    // Tạo overlay (nền đen mờ)
+    var overlay = document.createElement('div');
+    overlay.style.position = 'fixed';
+    overlay.style.top = '0';
+    overlay.style.left = '0';
+    overlay.style.width = '100%';
+    overlay.style.height = '100%';
+    overlay.style.backgroundColor = 'rgba(0,0,0,0.5)';
+    overlay.style.zIndex = '9998';
+    document.body.appendChild(overlay);
+    
+    // Tạo dialog
+    var dialog = document.createElement('div');
+    dialog.style.position = 'fixed';
+    dialog.style.top = '50%';
+    dialog.style.left = '50%';
+    dialog.style.transform = 'translate(-50%, -50%)';
+    dialog.style.width = '350px';
+    dialog.style.padding = '20px';
+    dialog.style.backgroundColor = 'white';
+    dialog.style.borderRadius = '20px';
+    dialog.style.boxShadow = '0 2px 10px rgba(0,0,0,0.2)';
+    dialog.style.zIndex = '9999';
+    
+    // Tạo nội dung dialog
+    dialog.innerHTML = \`
+        <div style="text-align: center; margin-bottom: 20px; font-family: Arial, sans-serif;">
+            <h3 style="margin-bottom: 15px; color: #333; font-family: Arial, sans-serif;">Xác nhận</h3>
+            <p style="font-size: 16px; color: #666; font-family: Arial, sans-serif;">Bạn muốn gửi qua OA khách hàng không?</p>
+            <div style="display: flex; justify-content: center; gap: 70px; margin-top: 20px;">
+                <button id="btnSaveOnly" style="padding: 8px 15px; border: 1px solid #338da5; background-color: white; color: #338da5; border-radius: 4px; cursor: pointer; font-family: Arial, sans-serif;">Lưu</button>
+                <button id="btnSaveAndSend" style="padding: 8px 15px; border: none; background-color: #338da5; color: white; border-radius: 4px; cursor: pointer; font-family: Arial, sans-serif;">Gửi</button>
+            </div>
+        </div>
+    \`;
+    
+    document.body.appendChild(dialog);
+    
+    // Xử lý sự kiện cho nút "Lưu"
+    document.getElementById('btnSaveOnly').addEventListener('click', function() {
+        document.body.removeChild(overlay);
+        document.body.removeChild(dialog);
+        exportToPdf(false);
+    });
+    
+    // Xử lý sự kiện cho nút "Gửi"
+    document.getElementById('btnSaveAndSend').addEventListener('click', function() {
+        document.body.removeChild(overlay);
+        document.body.removeChild(dialog);
+        exportToPdf(true);
+    });
+    
+    // Đóng dialog khi click ra ngoài
+    overlay.addEventListener('click', function() {
+        document.body.removeChild(overlay);
+        document.body.removeChild(dialog);
+    });
+}
+
+function exportToPdf(shouldConfirm) {
     // Lấy nội dung hiện tại của form
     var element = document.querySelector('.container');
     if (!element) {
@@ -596,10 +724,42 @@ function exportToPdf() {
                 display: block;
             }
             
-            /* Đảm bảo table không bị ngắt trang */
+            /* Loại bỏ border mặc định cho tất cả các bảng */
             table {
+                border: none !important;
+                border-collapse: collapse !important;
                 page-break-inside: auto;
                 width: 100% !important;
+            }
+            
+            /* Loại bỏ border cho các cell của table */
+            table td, table th {
+                border: none !important;
+            }
+            
+            /* Chỉ thêm border cho bảng chi tiết đơn hàng */
+            .table-bordered, 
+            table.table-bordered,
+            table.table-bordered th, 
+            table.table-bordered td {
+                border: 1px solid #ddd !important;
+            }
+            
+            /* Ngoại lệ: Xóa border cho table có cha là bảng chi tiết đơn hàng nhưng không phải là dữ liệu sản phẩm */
+            .table-bordered:not(.table-product-details),
+            .table-bordered:not(.table-product-details) th,
+            .table-bordered:not(.table-product-details) td {
+                border: none !important;
+            }
+            
+            /* Đảm bảo bảng chi tiết đơn hàng có border đầy đủ */
+            #entityType tr td,
+            #entityType tr th,
+            table tbody tr td[id='GiaTriDonHang'],
+            table tbody tr td[id='GiamGiaso'],
+            table tbody tr td[id='GTGT'],
+            table tbody tr td[id='TongTien'] {
+                border: 1px solid #ddd !important;
             }
             
             tr {
@@ -630,6 +790,48 @@ function exportToPdf() {
                 color: #ffffff !important;
                 -webkit-print-color-adjust: exact !important;
                 print-color-adjust: exact !important;
+            }
+            
+            /* Ghi đè Bootstrap CSS */
+            .table:not(.table-product-details) {
+                border: none !important;
+            }
+            .table:not(.table-product-details) > thead > tr > th,
+            .table:not(.table-product-details) > tbody > tr > th,
+            .table:not(.table-product-details) > tfoot > tr > th,
+            .table:not(.table-product-details) > thead > tr > td,
+            .table:not(.table-product-details) > tbody > tr > td,
+            .table:not(.table-product-details) > tfoot > tr > td {
+                border: none !important;
+            }
+            .table-bordered:not(.table-product-details) {
+                border: none !important;
+            }
+            .table-bordered:not(.table-product-details) > thead > tr > th,
+            .table-bordered:not(.table-product-details) > tbody > tr > th,
+            .table-bordered:not(.table-product-details) > tfoot > tr > th,
+            .table-bordered:not(.table-product-details) > thead > tr > td,
+            .table-bordered:not(.table-product-details) > tbody > tr > td,
+            .table-bordered:not(.table-product-details) > tfoot > tr > td {
+                border: none !important;
+            }
+            
+            /* CSS cho bảng thông tin thanh toán */
+            .table[style*="table-layout: fixed"] {
+                table-layout: fixed !important;
+                width: 100% !important;
+            }
+            
+            .table[style*="table-layout: fixed"] tr[style*="display: flex"] {
+                display: flex !important;
+                width: 100% !important;
+            }
+            
+            .table[style*="table-layout: fixed"] td[style*="flex: 1"] {
+                flex: 1 !important;
+                width: 33.33% !important;
+                display: inline-block !important;
+                vertical-align: top !important;
             }
         </style>
     \`);
@@ -690,6 +892,38 @@ function exportToPdf() {
             console.log("Tất cả hình ảnh đã tải xong");
             updateMessage("Đang tạo file PDF...");
             
+            // Áp dụng CSS cho bảng trước khi tạo PDF
+            try {
+                // Loại bỏ border cho tất cả bảng không phải bảng chi tiết
+                Array.from(frameDoc.querySelectorAll('table:not(.table-product-details)')).forEach(table => {
+                    table.style.border = 'none';
+                    Array.from(table.querySelectorAll('td, th')).forEach(cell => {
+                        cell.style.border = 'none';
+                    });
+                });
+                
+                // Đảm bảo border cho bảng chi tiết đơn hàng
+                const productTable = frameDoc.querySelector('.table-product-details');
+                if (productTable) {
+                    productTable.style.borderCollapse = 'collapse';
+                    productTable.style.border = '1px solid #ddd';
+                    Array.from(productTable.querySelectorAll('td, th')).forEach(cell => {
+                        cell.style.border = '1px solid #ddd';
+                    });
+                }
+                
+                // Điều chỉnh border cho các phần tổng tiền
+                Array.from(frameDoc.querySelectorAll('#GiaTriDonHang, #GiamGiaso, #GTGT, #TongTien')).forEach(cell => {
+                    if (cell) {
+                        cell.style.border = '1px solid #ddd';
+                    }
+                });
+                
+                console.log("Đã điều chỉnh border cho các bảng");
+            } catch (error) {
+                console.error("Lỗi khi điều chỉnh border:", error);
+            }
+            
             // Thêm thư viện html2pdf vào iframe
             var script = frameDoc.createElement('script');
             script.src = 'https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js';
@@ -702,7 +936,7 @@ function exportToPdf() {
                     var content = frameDoc.querySelector('.container');
                     var opt = {
                         //margin: [10, 10, 10, 10], // top, right, bottom, left
-                        filename: '${saleOrder.crdfd_name || "DonHang"}.pdf',
+                        filename: '${saleOrder.crdfd_name || "DonHang"}_${formattedDateTime}.pdf',
                         image: { type: 'jpeg', quality: 1.0 },
                         html2canvas: { 
                             scale: 2, 
@@ -732,8 +966,8 @@ function exportToPdf() {
                             console.log("Đã tạo PDF base64 thành công");
                             updateMessage("Đang gửi PDF lên máy chủ...");
                             
-                            // Gửi PDF lên API
-                            sendPdfToApi(pdfBase64, '${saleOrder.crdfd_sale_orderid || "ID123"}', '${saleOrder.crdfd_name || "DonHang"}.pdf')
+                            // Gửi PDF lên API với thông tin về xác nhận
+                            sendPdfToApi(pdfBase64, '${saleOrder.crdfd_sale_orderid || "ID123"}', '${saleOrder.crdfd_name || "DonHang"}_${formattedDateTime}.pdf', shouldConfirm)
                             .then((responseText) => {
                                 console.log("Đã gửi PDF lên API thành công, phản hồi:", responseText);
                                 updateMessage("Đang tải xuống PDF...");
@@ -800,7 +1034,7 @@ function exportToPdf() {
     };
 }
 
-function sendPdfToApi(pdfDataUri, saleOrderId, SOName) {
+function sendPdfToApi(pdfDataUri, saleOrderId, SOName, shouldConfirm) {
     // Loại bỏ phần đầu 'data:application/pdf;base64,' để lấy chuỗi base64 thuần túy
     var base64Data = pdfDataUri.split(',')[1] || pdfDataUri;
     
@@ -808,7 +1042,8 @@ function sendPdfToApi(pdfDataUri, saleOrderId, SOName) {
     var postData = {
         "File_Name": SOName,
         "ID_SO": saleOrderId,
-        "File": base64Data
+        "File": base64Data,
+        "Confirm": shouldConfirm === true // Đảm bảo là boolean
     };
     
     // URL API
