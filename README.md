@@ -3,7 +3,7 @@
 ## 1. Tạo PCF Control mới
 ```sh
 pac pcf init --namespace CustomComponent --name PrintForm --template dataset
-cd IconFontAwesome
+cd PrintForm
 npm install
 ```
 
