@@ -57,7 +57,7 @@ pac solution build --path .
   pac auth who
   ```
 
-## 9. Đẩy nhanh PCF control lên môi trường để test (không cần solution)
+## 9. Đẩy nhanh PCF control lên môi trường (Solution default)
 - Chạy trong thư mục chứa `.pcfproj`:
   ```sh
   pac pcf push --publisher-prefix <prefix>
