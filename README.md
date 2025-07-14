@@ -2,13 +2,13 @@
 
 ## 1. Tạo PCF Control mới
 ```sh
-pac pcf init --namespace CustomComponent --name IconFontAwesome --template field
+pac pcf init --namespace CustomComponent --name PrintForm --template dataset
 cd IconFontAwesome
 npm install
 ```
 
 ## 2. Phát triển control
-- Sửa file `index.ts` để hiện icon FontAwesome theo ý muốn.
+- Sửa file `index.ts` để hiện Formin theo ý muốn.
 - Sửa file `ControlManifest.Input.xml` để khai báo các property cần thiết.
 
 ## 3. Build PCF Control
